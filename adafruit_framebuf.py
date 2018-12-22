@@ -50,6 +50,34 @@ import struct
 MVLSB = 0  # Single bit displays (like SSD1306 OLED)
 RGB565 = 1  # 16-bit color displays
 GS4_HMSB = 2  # Unimplemented!
+MHMSB = 3  # Single bit displays like the Sharp Memory
+
+class MHMSBFormat:
+    """MHMSBFormat"""
+    @staticmethod
+    def set_pixel(framebuf, x, y, color):
+        """Set a given pixel to a color."""
+        index = (y * framebuf.stride + x) // 8
+        offset = 7 - x & 0x07
+        framebuf.buf[index] = (framebuf.buf[index] & ~(0x01 << offset)) | ((color != 0) << offset)
+
+    @staticmethod
+    def get_pixel(framebuf, x, y):
+        """Get the color of a given pixel"""
+        index = (y * framebuf.stride + x) // 8
+        offset = 7 - x & 0x07
+        return (framebuf.buf[index] >> offset) & 0x01
+
+    @staticmethod
+    def fill_rect(framebuf, x, y, width, height, color):
+        """Draw a rectangle at the given location, size and color. The ``fill_rect`` method draws
+        both the outline and interior."""
+        # pylint: disable=too-many-arguments
+        for _x in range(x, x+width):
+            offset = 7 - _x & 0x07
+            for _y in range(y, y+height):
+                index = (_y * framebuf.stride + _x) // 8
+                framebuf.buf[index] = (framebuf.buf[index] & ~(0x01 << offset)) | ((color != 0) << offset)
 
 class MVLSBFormat:
     """MVLSBFormat"""
@@ -140,6 +168,8 @@ class FrameBuffer:
             self.stride = width
         if buf_format == MVLSB:
             self.format = MVLSBFormat()
+        elif buf_format == MHMSB:
+            self.format = MHMSBFormat()
         elif buf_format == RGB565:
             self.format = RGB565Format()
         else:
@@ -209,13 +239,13 @@ class FrameBuffer:
         else:
             err = d_y / 2.0
             while y != y_1:
-                self.pixel(x, y, 1)
+                self.pixel(x, y, color)
                 err -= d_x
                 if err < 0:
                     x += s_x
                     err += d_y
                 y += s_y
-        self.pixel(x, y, 1)
+        self.pixel(x, y, color)
 
     def blit(self):
         """blit is not yet implemented"""
@@ -227,11 +257,7 @@ class FrameBuffer:
 
     def text(self, string, x, y, color, *,
              font_name="font5x8.bin"):
-        """Write an ascii string to location (x, y) as the bottom left corner,
-        in a given color, in left-to-right fashion.
-        Does not handle text wrapping. You can also pass in a font_name, but
-        this has to be generated as a special binary format and placed in the
-        working directory of the main script (so, probably /)"""
+        """text is not yet implemented"""
         if not self._font or self._font.font_name != font_name:
             # load the font!
             self._font = BitmapFont()
