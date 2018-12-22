@@ -183,9 +183,9 @@ class FrameBuffer:
         a 1 pixel outline."""
         # pylint: disable=too-many-arguments
         self.fill_rect(x, y, width, 1, color)
-        self.fill_rect(x, y + height, width, 1, color)
+        self.fill_rect(x, y + height-1, width, 1, color)
         self.fill_rect(x, y, 1, height, color)
-        self.fill_rect(x + width, y, 1, height, color)
+        self.fill_rect(x + width - 1, y, 1, height, color)
 
     def line(self, x_0, y_0, x_1, y_1, color):
         # pylint: disable=too-many-arguments
