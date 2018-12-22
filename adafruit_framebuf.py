@@ -23,7 +23,7 @@
 `adafruit_framebuf`
 ====================================================
 
-CircuitPython frambuf module, based on the Python frambuf module.
+CircuitPython pure-python framebuf module, based on the micropython framebuf module.
 
 * Author(s): Kattni Rembor, Tony DiCola, original file created by Damien P. George
 
@@ -77,7 +77,8 @@ class MHMSBFormat:
             offset = 7 - _x & 0x07
             for _y in range(y, y+height):
                 index = (_y * framebuf.stride + _x) // 8
-                framebuf.buf[index] = (framebuf.buf[index] & ~(0x01 << offset)) | ((color != 0) << offset)
+                framebuf.buf[index] = (framebuf.buf[index] & ~(0x01 << offset)) \
+                                      | ((color != 0) << offset)
 
 class MVLSBFormat:
     """MVLSBFormat"""
