@@ -227,7 +227,11 @@ class FrameBuffer:
 
     def text(self, string, x, y, color, *,
              font_name="font5x8.bin"):
-        """text is not yet implemented"""
+        """Write an ascii string to location (x, y) as the bottom left corner,
+        in a given color, in left-to-right fashion.
+        Does not handle text wrapping. You can also pass in a font_name, but
+        this has to be generated as a special binary format and placed in the
+        working directory of the main script (so, probably /)"""
         if not self._font or self._font.font_name != font_name:
             # load the font!
             self._font = BitmapFont()
