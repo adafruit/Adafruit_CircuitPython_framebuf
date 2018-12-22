@@ -23,7 +23,7 @@ setup(
     use_scm_version=True,
     setup_requires=['setuptools_scm'],
 
-    description='CircuitPython library .',
+    description='CircuitPython frambuf module, based on the Python frambuf module.',
     long_description=long_description,
     long_description_content_type='text/x-rst',
 
