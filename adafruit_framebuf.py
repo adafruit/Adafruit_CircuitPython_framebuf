@@ -44,11 +44,12 @@ Implementation Notes
 __version__ = "0.0.0-auto.0"
 __repo__ = "https://github.com/adafruit/Adafruit_CircuitPython_framebuf.git"
 
+import struct
+
 # Framebuf format constants:
 MVLSB = 0  # Single bit displays (like SSD1306 OLED)
 RGB565 = 1  # 16-bit color displays
 GS4_HMSB = 2  # Unimplemented!
-
 
 class MVLSBFormat:
     """MVLSBFormat"""
@@ -134,6 +135,7 @@ class FrameBuffer:
         self.width = width
         self.height = height
         self.stride = stride
+        self._font = None
         if self.stride is None:
             self.stride = width
         if buf_format == MVLSB:
@@ -183,9 +185,9 @@ class FrameBuffer:
         a 1 pixel outline."""
         # pylint: disable=too-many-arguments
         self.fill_rect(x, y, width, 1, color)
-        self.fill_rect(x, y + height, width, 1, color)
+        self.fill_rect(x, y + height-1, width, 1, color)
         self.fill_rect(x, y, 1, height, color)
-        self.fill_rect(x + width, y, 1, height, color)
+        self.fill_rect(x + width - 1, y, 1, height, color)
 
     def line(self, x_0, y_0, x_1, y_1, color):
         # pylint: disable=too-many-arguments
@@ -223,9 +225,85 @@ class FrameBuffer:
         """scroll is not yet implemented"""
         raise NotImplementedError()
 
-    def text(self):
-        """text is not yet implemented"""
-        raise NotImplementedError()
+    def text(self, string, x, y, color, *,
+             font_name="font5x8.bin"):
+        """Write an ascii string to location (x, y) as the bottom left corner,
+        in a given color, in left-to-right fashion.
+        Does not handle text wrapping. You can also pass in a font_name, but
+        this has to be generated as a special binary format and placed in the
+        working directory of the main script (so, probably /)"""
+        if not self._font or self._font.font_name != font_name:
+            # load the font!
+            self._font = BitmapFont()
+        w = self._font.font_width
+        for i, char in enumerate(string):
+            self._font.draw_char(char,
+                                 x + (i * (w + 1)),
+                                 y, self, color)
+
+# MicroPython basic bitmap font renderer.
+# Author: Tony DiCola
+# License: MIT License (https://opensource.org/licenses/MIT)
+class BitmapFont:
+    """A helper class to read binary font tiles and 'seek' through them as a
+    file to display in a framebuffer. We use file access so we dont waste 1KB
+    of RAM on a font!"""
+    def __init__(self, font_name='font5x8.bin'):
+        # Specify the drawing area width and height, and the pixel function to
+        # call when drawing pixels (should take an x and y param at least).
+        # Optionally specify font_name to override the font file to use (default
+        # is font5x8.bin).  The font format is a binary file with the following
+        # format:
+        # - 1 unsigned byte: font character width in pixels
+        # - 1 unsigned byte: font character height in pixels
+        # - x bytes: font data, in ASCII order covering all 255 characters.
+        #            Each character should have a byte for each pixel column of
+        #            data (i.e. a 5x8 font has 5 bytes per character).
+        self.font_name = font_name
+
+        # Open the font file and grab the character width and height values.
+        # Note that only fonts up to 8 pixels tall are currently supported.
+        try:
+            self._font = open(self.font_name, 'rb')
+        except OSError:
+            print("Could not find font file", font_name)
+            raise
+        self.font_width, self.font_height = struct.unpack('BB', self._font.read(2))
+
+    def deinit(self):
+        """Close the font file as cleanup."""
+        self._font.close()
+
+    def __enter__(self):
+        """Initialize/open the font file"""
+        self.__init__()
+        return self
+
+    def __exit__(self, exception_type, exception_value, traceback):
+        """cleanup on exit"""
+        self.deinit()
+
+    def draw_char(self, char, x, y, framebuffer, color):
+        # pylint: disable=too-many-arguments
+        """Draw one character at position (x,y) to a framebuffer in a given color"""
+        # Don't draw the character if it will be clipped off the visible area.
+        if x < -self.font_width or x >= framebuffer.width or \
+           y < -self.font_height or y >= framebuffer.height:
+            return
+        # Go through each column of the character.
+        for char_x in range(self.font_width):
+            # Grab the byte for the current column of font data.
+            self._font.seek(2 + (ord(char) * self.font_width) + char_x)
+            line = struct.unpack('B', self._font.read(1))[0]
+            # Go through each row in the column byte.
+            for char_y in range(self.font_height):
+                # Draw a pixel for each bit that's flipped on.
+                if (line >> char_y) & 0x1:
+                    framebuffer.pixel(x + char_x, y + char_y, color)
+
+    def width(self, text):
+        """Return the pixel width of the specified text message."""
+        return len(text) * (self.font_width + 1)
 
 
 class FrameBuffer1(FrameBuffer):  # pylint: disable=abstract-method
