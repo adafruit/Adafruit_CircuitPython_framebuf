@@ -268,6 +268,26 @@ class FrameBuffer:
                                  x + (i * (w + 1)),
                                  y, self, color)
 
+    def image(self, img):
+        """Set buffer to value of Python Imaging Library image.  The image should
+        be in 1 bit mode and a size equal to the display size."""
+        if img.mode != '1':
+            raise ValueError('Image must be in mode 1.')
+        imwidth, imheight = img.size
+        if imwidth != self.width or imheight != self.height:
+            raise ValueError('Image must be same dimensions as display ({0}x{1}).' \
+                .format(self.width, self.height))
+        # Grab all the pixels from the image, faster than getpixel.
+        pixels = img.load()
+        # Clear buffer
+        for i in range(len(self.buf)):
+            self.buf[i] = 0
+        # Iterate through the pixels
+        for x in range(self.width):       # yes this double loop is slow,
+            for y in range(self.height):  #  but these displays are small!
+                if pixels[(x, y)]:
+                    self.pixel(x, y, 1)   # only write if pixel is true
+
 # MicroPython basic bitmap font renderer.
 # Author: Tony DiCola
 # License: MIT License (https://opensource.org/licenses/MIT)
