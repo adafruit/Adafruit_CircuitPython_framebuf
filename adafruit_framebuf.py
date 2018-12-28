@@ -286,7 +286,7 @@ class FrameBuffer:
         index = 0
         for x in range(self.width):       # yes this double loop is slow,
             for y in range(self.height):  #  but these displays are small!
-                if pixels[(x,y)]:
+                if pixels[(x, y)]:
                     self.pixel(x, y, 1)   # only write if pixel is true
 
 # MicroPython basic bitmap font renderer.
