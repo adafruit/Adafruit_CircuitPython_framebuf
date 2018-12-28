@@ -282,8 +282,7 @@ class FrameBuffer:
         # Clear buffer
         for i in range(len(self.buf)):
             self.buf[i] = 0
-        # Iterate through the memory pages
-        index = 0
+        # Iterate through the pixels
         for x in range(self.width):       # yes this double loop is slow,
             for y in range(self.height):  #  but these displays are small!
                 if pixels[(x, y)]:
