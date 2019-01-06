@@ -380,9 +380,9 @@ class BitmapFont:
         # pylint: disable=too-many-arguments
         """Draw one character at position (x,y) to a framebuffer in a given color"""
         # Don't draw the character if it will be clipped off the visible area.
-        if x < -self.font_width or x >= framebuffer.width or \
-           y < -self.font_height or y >= framebuffer.height:
-            return
+        #if x < -self.font_width or x >= framebuffer.width or \
+        #   y < -self.font_height or y >= framebuffer.height:
+        #    return
         # Go through each column of the character.
         for char_x in range(self.font_width):
             # Grab the byte for the current column of font data.
