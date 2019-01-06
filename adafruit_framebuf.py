@@ -193,10 +193,10 @@ class FrameBuffer:
             x = self.width - x - 1
         if self.rotation == 2:
             x = self.width - x - 1
-            y = self.width - y - 1
+            y = self.height - y - 1
         if self.rotation == 3:
             x, y = y, x
-            y = self.width - y - 1
+            y = self.height - y - 1
 
         if x < 0 or x >= self.width or y < 0 or y >= self.height:
             return None
