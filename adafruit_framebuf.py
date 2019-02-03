@@ -252,9 +252,31 @@ class FrameBuffer:
         """blit is not yet implemented"""
         raise NotImplementedError()
 
-    def scroll(self):
-        """scroll is not yet implemented"""
-        raise NotImplementedError()
+    def scroll(self, delta_x, delta_y):
+        """shifts framebuf in x and y direction"""
+        if delta_x < 0:
+            shift_x = 0
+            xend = self.width + delta_x
+            dt_x = 1
+        else:
+            shift_x = self.width - 1
+            xend = delta_x - 1
+            dt_x = -1
+        if delta_y < 0:
+            y = 0
+            yend = self.height + delta_y
+            dt_y = 1
+        else:
+            y = self.height - 1
+            yend = delta_y - 1
+            dt_y = -1
+        while y != yend:
+            x = shift_x
+            while x != xend:
+                self.format.set_pixel(
+                    self, x, y, self.format.get_pixel(self, x - delta_x, y - delta_y))
+                x += dt_x
+            y += dt_y
 
     def text(self, string, x, y, color, *,
              font_name="font5x8.bin"):
