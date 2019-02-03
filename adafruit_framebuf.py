@@ -273,8 +273,8 @@ class FrameBuffer:
         while y != yend:
             x = shift_x
             while x != xend:
-                self.format.set_pixel(self, x, y, 
-                    self.format.get_pixel(self, x - delta_x, y - delta_y))
+                self.format.set_pixel(
+                  self, x, y, self.format.get_pixel(self, x - delta_x, y - delta_y))
                 x += dt_x
             y += dt_y
 
