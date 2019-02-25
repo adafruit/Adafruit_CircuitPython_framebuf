@@ -278,17 +278,24 @@ class FrameBuffer:
                 x += dt_x
             y += dt_y
 
-    def text(self, string, x, y, color, *,
+    def _text(self, string, x, y, color, size, *,
              font_name="font5x8.bin"):
         """text is not yet implemented"""
+
         if not self._font or self._font.font_name != font_name:
             # load the font!
             self._font = BitmapFont()
         w = self._font.font_width
         for i, char in enumerate(string):
             self._font.draw_char(char,
-                                 x + (i * (w + 1)),
-                                 y, self, color)
+                                 x + (i * (w + 1))*size,
+                                 y, self, color, size = size)
+
+    def text(self, string, x, y, color, *,
+             font_name="font5x8.bin", size = 1):
+        for chunk in string.split('\n'):
+            self._text(chunk, x, y, color, size, font_name="font5x8.bin")
+            y += self._font.font_height*size
 
     def image(self, img):
         """Set buffer to value of Python Imaging Library image.  The image should
@@ -352,7 +359,8 @@ class BitmapFont:
         """cleanup on exit"""
         self.deinit()
 
-    def draw_char(self, char, x, y, framebuffer, color):
+    def draw_char(self, char, x, y, framebuffer, color, size = 1):
+        size = max(size, 1)
         # pylint: disable=too-many-arguments
         """Draw one character at position (x,y) to a framebuffer in a given color"""
         # Don't draw the character if it will be clipped off the visible area.
@@ -368,7 +376,7 @@ class BitmapFont:
             for char_y in range(self.font_height):
                 # Draw a pixel for each bit that's flipped on.
                 if (line >> char_y) & 0x1:
-                    framebuffer.pixel(x + char_x, y + char_y, color)
+                    framebuffer.fill_rect(x + char_x*size, y + char_y*size, size, size, color)
 
     def width(self, text):
         """Return the pixel width of the specified text message."""
