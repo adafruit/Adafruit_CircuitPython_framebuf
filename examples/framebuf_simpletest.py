@@ -34,4 +34,5 @@ print("Text test: ")
 fb.fill_rect(0, 0, WIDTH, HEIGHT, False)
 # write some text
 fb.text("hello", 0, 0, True)
+fb.text("hello", 8, 0, True, size = 2)
 print_buffer(fb)
