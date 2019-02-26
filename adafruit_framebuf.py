@@ -278,14 +278,9 @@ class FrameBuffer:
                 x += dt_x
             y += dt_y
 
-    def _text(self, string, x, y, color, size, *,
-             font_name="font5x8.bin"):
-        """text is not yet implemented"""
-
-
-
+    # pylint: disable=too-many-arguments
     def text(self, string, x, y, color, *,
-             font_name="font5x8.bin", size = 1):
+             font_name="font5x8.bin", size=1):
         for chunk in string.split('\n'):
             if not self._font or self._font.font_name != font_name:
                 # load the font!
@@ -294,8 +289,9 @@ class FrameBuffer:
             for i, char in enumerate(chunk):
                 self._font.draw_char(char,
                                      x + (i * (w + 1))*size,
-                                     y, self, color, size = size)
+                                     y, self, color, size=size)
             y += self._font.font_height*size
+    # pylint: enable=too-many-arguments
 
 
 
@@ -361,7 +357,7 @@ class BitmapFont:
         """cleanup on exit"""
         self.deinit()
 
-    def draw_char(self, char, x, y, framebuffer, color, size = 1):
+    def draw_char(self, char, x, y, framebuffer, color, size=1):
         size = max(size, 1)
         # pylint: disable=too-many-arguments
         """Draw one character at position (x,y) to a framebuffer in a given color"""
