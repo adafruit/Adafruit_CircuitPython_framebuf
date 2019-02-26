@@ -362,8 +362,8 @@ class BitmapFont:
 
     # pylint: disable=too-many-arguments
     def draw_char(self, char, x, y, framebuffer, color, size=1):
-        size = max(size, 1)
         """Draw one character at position (x,y) to a framebuffer in a given color"""
+        size = max(size, 1)
         # Don't draw the character if it will be clipped off the visible area.
         if x < -self.font_width or x >= framebuffer.width or \
            y < -self.font_height or y >= framebuffer.height:
