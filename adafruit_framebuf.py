@@ -282,20 +282,22 @@ class FrameBuffer:
              font_name="font5x8.bin"):
         """text is not yet implemented"""
 
-        if not self._font or self._font.font_name != font_name:
-            # load the font!
-            self._font = BitmapFont()
-        w = self._font.font_width
-        for i, char in enumerate(string):
-            self._font.draw_char(char,
-                                 x + (i * (w + 1))*size,
-                                 y, self, color, size = size)
+
 
     def text(self, string, x, y, color, *,
              font_name="font5x8.bin", size = 1):
         for chunk in string.split('\n'):
-            self._text(chunk, x, y, color, size, font_name="font5x8.bin")
+            if not self._font or self._font.font_name != font_name:
+                # load the font!
+                self._font = BitmapFont()
+            w = self._font.font_width
+            for i, char in enumerate(chunk):
+                self._font.draw_char(char,
+                                     x + (i * (w + 1))*size,
+                                     y, self, color, size = size)
             y += self._font.font_height*size
+
+
 
     def image(self, img):
         """Set buffer to value of Python Imaging Library image.  The image should
