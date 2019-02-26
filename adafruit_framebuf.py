@@ -281,6 +281,9 @@ class FrameBuffer:
     # pylint: disable=too-many-arguments
     def text(self, string, x, y, color, *,
              font_name="font5x8.bin", size=1):
+        """Place text on the screen in variables sizes. Breaks on \n to next line.
+        Does not break on line going off screen.
+        """
         for chunk in string.split('\n'):
             if not self._font or self._font.font_name != font_name:
                 # load the font!
@@ -357,9 +360,9 @@ class BitmapFont:
         """cleanup on exit"""
         self.deinit()
 
+    # pylint: disable=too-many-arguments
     def draw_char(self, char, x, y, framebuffer, color, size=1):
         size = max(size, 1)
-        # pylint: disable=too-many-arguments
         """Draw one character at position (x,y) to a framebuffer in a given color"""
         # Don't draw the character if it will be clipped off the visible area.
         if x < -self.font_width or x >= framebuffer.width or \
