@@ -69,6 +69,16 @@ class MHMSBFormat:
         return (framebuf.buf[index] >> offset) & 0x01
 
     @staticmethod
+    def fill(framebuf, color):
+        """completely fill/clear the buffer with a color"""
+        if color:
+            fill = 0xFF
+        else:
+            fill = 0x00
+        for i in range(len(framebuf.buf)):
+            framebuf.buf[i] = fill
+
+    @staticmethod
     def fill_rect(framebuf, x, y, width, height, color):
         """Draw a rectangle at the given location, size and color. The ``fill_rect`` method draws
         both the outline and interior."""
@@ -97,6 +107,16 @@ class MVLSBFormat:
         return (framebuf.buf[index] >> offset) & 0x01
 
     @staticmethod
+    def fill(framebuf, color):
+        """completely fill/clear the buffer with a color"""
+        if color:
+            fill = 0xFF
+        else:
+            fill = 0x00
+        for i in range(len(framebuf.buf)):
+            framebuf.buf[i] = fill
+
+    @staticmethod
     def fill_rect(framebuf, x, y, width, height, color):
         """Draw a rectangle at the given location, size and color. The ``fill_rect`` method draws
         both the outline and interior."""
@@ -109,36 +129,6 @@ class MVLSBFormat:
                                            ((color != 0) << offset)
             y += 1
             height -= 1
-
-
-class RGB565Format:
-    """RGB565Format"""
-    @staticmethod
-    def set_pixel(framebuf, x, y, color):
-        """Set a given pixel to a color."""
-        index = (x + y * framebuf.stride) * 2
-        framebuf.buf[index] = (color >> 8) & 0xFF
-        framebuf.buf[index + 1] = color & 0xFF
-
-    @staticmethod
-    def get_pixel(framebuf, x, y):
-        """Get the color of a given pixel"""
-        index = (x + y * framebuf.stride) * 2
-        return (framebuf.buf[index] << 8) | framebuf.buf[index + 1]
-
-    @staticmethod
-    def fill_rect(framebuf, x, y, width, height, color):
-        # pylint: disable=too-many-arguments
-        """Draw a rectangle at the given location, size and color. The ``fill_rect`` method draws
-        both the outline and interior."""
-        while height > 0:
-            for w_w in range(width):
-                index = (w_w + x + y * framebuf.stride) * 2
-                framebuf.buf[index] = (color >> 8) & 0xFF
-                framebuf.buf[index + 1] = color & 0xFF
-            y += 1
-            height -= 1
-
 
 class FrameBuffer:
     """FrameBuffer object.
@@ -171,31 +161,44 @@ class FrameBuffer:
             self.format = MVLSBFormat()
         elif buf_format == MHMSB:
             self.format = MHMSBFormat()
-        elif buf_format == RGB565:
-            self.format = RGB565Format()
         else:
             raise ValueError('invalid format')
+        self._rotation = 0
+
+    @property
+    def rotation(self):
+        """The rotation setting of the display, can be one of (0, 1, 2, 3)"""
+        return self._rotation
+
+    @rotation.setter
+    def rotation(self, val):
+        if not val in (0, 1, 2, 3):
+            raise RuntimeError("Bad rotation setting")
+        self._rotation = val
 
     def fill(self, color):
         """Fill the entire FrameBuffer with the specified color."""
-        self.format.fill_rect(self, 0, 0, self.width, self.height, color)
+        self.format.fill(self, color)
 
     def fill_rect(self, x, y, width, height, color):
         """Draw a rectangle at the given location, size and color. The ``fill_rect`` method draws
         both the outline and interior."""
         # pylint: disable=too-many-arguments, too-many-boolean-expressions
-        if width < 1 or height < 1 or (x + width) <= 0 or (y + height) <= 0 or y >= self.height \
-                or x >= self.width:
-            return
-        x_end = min(self.width, x + width)
-        y_end = min(self.height, y + height)
-        x = max(x, 0)
-        y = max(y, 0)
-        self.format.fill_rect(self, x, y, x_end - x, y_end - y, color)
+        self.rect(x, y, width, height, color, fill=True)
 
     def pixel(self, x, y, color=None):
         """If ``color`` is not given, get the color value of the specified pixel. If ``color`` is
         given, set the specified pixel to the given color."""
+        if self.rotation == 1:
+            x, y = y, x
+            x = self.width - x - 1
+        if self.rotation == 2:
+            x = self.width - x - 1
+            y = self.height - y - 1
+        if self.rotation == 3:
+            x, y = y, x
+            y = self.height - y - 1
+
         if x < 0 or x >= self.width or y < 0 or y >= self.height:
             return None
         if color is None:
@@ -205,20 +208,43 @@ class FrameBuffer:
 
     def hline(self, x, y, width, color):
         """Draw a horizontal line up to a given length."""
-        self.fill_rect(x, y, width, 1, color)
+        self.rect(x, y, width, 1, color, fill=True)
 
     def vline(self, x, y, height, color):
         """Draw a vertical line up to a given length."""
-        self.fill_rect(x, y, 1, height, color)
+        self.rect(x, y, 1, height, color, fill=True)
 
-    def rect(self, x, y, width, height, color):
+    def rect(self, x, y, width, height, color, *, fill=False):
         """Draw a rectangle at the given location, size and color. The ```rect``` method draws only
         a 1 pixel outline."""
         # pylint: disable=too-many-arguments
-        self.fill_rect(x, y, width, 1, color)
-        self.fill_rect(x, y + height-1, width, 1, color)
-        self.fill_rect(x, y, 1, height, color)
-        self.fill_rect(x + width - 1, y, 1, height, color)
+        if self.rotation == 1:
+            x, y = y, x
+            width, height = height, width
+            x = self.width - x - width
+        if self.rotation == 2:
+            x = self.width - x - width
+            y = self.height - y - height
+        if self.rotation == 3:
+            x, y = y, x
+            width, height = height, width
+            y = self.height - y - height
+
+        # pylint: disable=too-many-boolean-expressions
+        if width < 1 or height < 1 or (x + width) <= 0 or (y + height) <= 0 or \
+                y >= self.height or x >= self.width:
+            return
+        x_end = min(self.width-1, x + width-1)
+        y_end = min(self.height-1, y + height-1)
+        x = max(x, 0)
+        y = max(y, 0)
+        if fill:
+            self.format.fill_rect(self, x, y, x_end-x+1, y_end-y+1, color)
+        else:
+            self.format.fill_rect(self, x, y, x_end-x+1, 1, color)
+            self.format.fill_rect(self, x, y, 1, y_end-y+1, color)
+            self.format.fill_rect(self, x, y_end, x_end-x+1, 1, color)
+            self.format.fill_rect(self, x_end, y, 1, y_end-y+1, color)
 
     def line(self, x_0, y_0, x_1, y_1, color):
         # pylint: disable=too-many-arguments
@@ -356,14 +382,17 @@ class BitmapFont:
         # pylint: disable=too-many-arguments
         """Draw one character at position (x,y) to a framebuffer in a given color"""
         # Don't draw the character if it will be clipped off the visible area.
-        if x < -self.font_width or x >= framebuffer.width or \
-           y < -self.font_height or y >= framebuffer.height:
-            return
+        #if x < -self.font_width or x >= framebuffer.width or \
+        #   y < -self.font_height or y >= framebuffer.height:
+        #    return
         # Go through each column of the character.
         for char_x in range(self.font_width):
             # Grab the byte for the current column of font data.
             self._font.seek(2 + (ord(char) * self.font_width) + char_x)
-            line = struct.unpack('B', self._font.read(1))[0]
+            try:
+                line = struct.unpack('B', self._font.read(1))[0]
+            except RuntimeError:
+                continue # maybe character isnt there? go to next
             # Go through each row in the column byte.
             for char_y in range(self.font_height):
                 # Draw a pixel for each bit that's flipped on.
