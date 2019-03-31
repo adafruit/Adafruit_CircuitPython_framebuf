@@ -230,8 +230,9 @@ class FrameBuffer:
             width, height = height, width
             y = self.height - y - height
 
-        if width < 1 or height < 1 or (x + width) <= 0 or (y + height) <= 0 or y >= self.height \
-                or x >= self.width:  # pylint: disable=too-many-boolean-expressions
+        # pylint: disable=too-many-boolean-expressions
+        if width < 1 or height < 1 or (x + width) <= 0 or (y + height) <= 0 or \
+                y >= self.height or x >= self.width:
             return
         x_end = min(self.width-1, x + width-1)
         y_end = min(self.height-1, y + height-1)
