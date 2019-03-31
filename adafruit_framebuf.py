@@ -167,6 +167,7 @@ class FrameBuffer:
 
     @property
     def rotation(self):
+        """The rotation setting of the display, can be one of (0, 1, 2, 3)"""
         return self._rotation
 
     @rotation.setter
@@ -230,7 +231,7 @@ class FrameBuffer:
             y = self.height - y - height
 
         if width < 1 or height < 1 or (x + width) <= 0 or (y + height) <= 0 or y >= self.height \
-                or x >= self.width:
+                or x >= self.width:  # pylint: disable=too-many-boolean-expressions
             return
         x_end = min(self.width-1, x + width-1)
         y_end = min(self.height-1, y + height-1)
