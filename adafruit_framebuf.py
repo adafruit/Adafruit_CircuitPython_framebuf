@@ -220,29 +220,29 @@ class FrameBuffer:
         if self.rotation == 1:
             x, y = y, x
             width, height = height, width
-            x = self.width - x - 1
+            x = self.width - x - width
         if self.rotation == 2:
-            x = self.width - x - 1
-            y = self.width - y - 1
+            x = self.width - x - width
+            y = self.height - y - height
         if self.rotation == 3:
             x, y = y, x
             width, height = height, width
-            y = self.width - y - 1
+            y = self.height - y - height
 
         if width < 1 or height < 1 or (x + width) <= 0 or (y + height) <= 0 or y >= self.height \
                 or x >= self.width:
             return
-        x_end = min(self.width-1, x + width)
-        y_end = min(self.height-1, y + height)
+        x_end = min(self.width-1, x + width-1)
+        y_end = min(self.height-1, y + height-1)
         x = max(x, 0)
         y = max(y, 0)
         if fill:
-            self.format.fill_rect(self, x, y, x_end - x, y_end - y, color)
+            self.format.fill_rect(self, x, y, x_end-x+1, y_end-y+1, color)
         else:
-            self.format.fill_rect(self, x, y, x_end - x, 1, color)
-            self.format.fill_rect(self, x, y, 1, y_end - y, color)
-            self.format.fill_rect(self, x, y_end, x_end - x, 1, color)
-            self.format.fill_rect(self, x_end, y, 1, y_end - y, color)
+            self.format.fill_rect(self, x, y, x_end-x+1, 1, color)
+            self.format.fill_rect(self, x, y, 1, y_end-y+1, color)
+            self.format.fill_rect(self, x, y_end, x_end-x+1, 1, color)
+            self.format.fill_rect(self, x_end, y, 1, y_end-y+1, color)
 
     def line(self, x_0, y_0, x_1, y_1, color):
         # pylint: disable=too-many-arguments
