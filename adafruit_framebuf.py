@@ -152,9 +152,9 @@ class FrameBuffer:
     color value c is passed to a method, c is  a small integer with an encoding
     that is dependent on the format of the FrameBuffer.
     param stride: The number of pixels between each horizontal line of pixels in the
-    FrameBuffer. This defaults to ``width`` but may need adjustments when
+    FrameBuffer. This defaults to 'width' but may need adjustments when
     implementing a FrameBuffer within another larger FrameBuffer or screen. The
-    ``buf`` size must accommodate an increased step size.
+    'buf' size must accommodate an increased step size.
     """
     def __init__(self, buf, width, height, buf_format=MVLSB, stride=None):
         # pylint: disable=too-many-arguments
