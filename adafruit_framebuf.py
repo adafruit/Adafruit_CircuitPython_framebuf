@@ -143,8 +143,6 @@ class RGB565Format:
 class FrameBuffer:
     """FrameBuffer object.
     param buf: An object with a buffer protocol which must be large enough to contain every
-    pixel defined by the width, height and format of the FrameBuffer.
-    param width: The width of the FrameBuffer in pixel
     param height: The height of the FrameBuffer in pixel
     param buf_format: Specifies the type of pixel used in the FrameBuffer; permissible values
     are listed under Constants below. These set the number of bits used to
