@@ -142,20 +142,15 @@ class RGB565Format:
 
 class FrameBuffer:
     """FrameBuffer object.
-
     :param buf: An object with a buffer protocol which must be large enough to contain every
     pixel defined by the width, height and format of the FrameBuffer.
-
     :param width: The width of the FrameBuffer in pixel
-
     :param height: The height of the FrameBuffer in pixel
-
     :param buf_format: Specifies the type of pixel used in the FrameBuffer; permissible values
     are listed under Constants below. These set the number of bits used to
     encode a color value and the layout of these bits in ``buf``. Where a
     color value c is passed to a method, c is  a small integer with an encoding
     that is dependent on the format of the FrameBuffer.
-
     :param stride: The number of pixels between each horizontal line of pixels in the
     FrameBuffer. This defaults to ``width`` but may need adjustments when
     implementing a FrameBuffer within another larger FrameBuffer or screen. The
