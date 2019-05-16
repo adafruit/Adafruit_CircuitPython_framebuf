@@ -142,7 +142,6 @@ class RGB565Format:
 
 class FrameBuffer:
     """FrameBuffer object.
-
     :param buf: An object with a buffer protocol which must be large enough to contain every
         pixel defined by the width, height and format of the FrameBuffer.
     :param width: The width of the FrameBuffer in pixel
