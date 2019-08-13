@@ -44,6 +44,7 @@ Implementation Notes
 __version__ = "0.0.0-auto.0"
 __repo__ = "https://github.com/adafruit/Adafruit_CircuitPython_framebuf.git"
 
+import os
 import struct
 
 # Framebuf format constants:
@@ -364,6 +365,9 @@ class BitmapFont:
             print("Could not find font file", font_name)
             raise
         self.font_width, self.font_height = struct.unpack('BB', self._font.read(2))
+        # simple font file validation check based on expected file size
+        if 2 + 256 * self.font_width != os.stat(font_name)[6]:
+            raise RuntimeError("Invalid font file: " + font_name)
 
     def deinit(self):
         """Close the font file as cleanup."""
