@@ -282,6 +282,7 @@ class FrameBuffer:
     def text(self, string, x, y, color, *,
              font_name="font5x8.bin", size=1):
         """Place text on the screen in variables sizes. Breaks on \n to next line.
+
         Does not break on line going off screen.
         """
         for chunk in string.split('\n'):
