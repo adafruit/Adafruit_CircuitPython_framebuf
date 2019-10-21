@@ -22,6 +22,12 @@ def print_buffer(the_fb):
         print(".")
     print("." * (the_fb.width+2))
 
+# Small function to clear the buffer
+def clear_buffer():
+    for i, _ in enumerate(buffer):
+        buffer[i] = 0
+
+
 print("Shapes test: ")
 fb.pixel(3, 5, True)
 fb.rect(0, 0, fb.width, fb.height, True)
@@ -32,7 +38,12 @@ print_buffer(fb)
 print("Text test: ")
 # empty
 fb.fill_rect(0, 0, WIDTH, HEIGHT, False)
+
 # write some text
 fb.text("hello", 0, 0, True)
+print_buffer(fb)
+clear_buffer()
+
+# write some larger text
 fb.text("hello", 8, 0, True, size = 2)
 print_buffer(fb)
