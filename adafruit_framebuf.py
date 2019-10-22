@@ -216,8 +216,8 @@ class FrameBuffer:
         self.rect(x, y, 1, height, color, fill=True)
 
     def circle(self, center_x, center_y, radius, color):
-        """Draw a circle at the given midpoint location, radius and color. The ```circle``` method draws only
-        a 1 pixel outline."""
+        """Draw a circle at the given midpoint location, radius and color.
+        The ```circle``` method draws only a 1 pixel outline."""
         x = radius - 1
         y = 0
         d_x = 1
