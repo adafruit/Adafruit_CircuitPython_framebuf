@@ -215,6 +215,32 @@ class FrameBuffer:
         """Draw a vertical line up to a given length."""
         self.rect(x, y, 1, height, color, fill=True)
 
+    def circle(self, center_x, center_y, radius, color):
+        """Draw a circle at the given midpoint location, radius and color.
+        The ```circle``` method draws only a 1 pixel outline."""
+        x = radius - 1
+        y = 0
+        d_x = 1
+        d_y = 1
+        err = d_x - (radius << 1)
+        while x >= y:
+            self.pixel(center_x + x, center_y + y, color)
+            self.pixel(center_x + y, center_y + x, color)
+            self.pixel(center_x - y, center_y + x, color)
+            self.pixel(center_x - x, center_y + y, color)
+            self.pixel(center_x - x, center_y - y, color)
+            self.pixel(center_x - y, center_y - x, color)
+            self.pixel(center_x + y, center_y - x, color)
+            self.pixel(center_x + x, center_y - y, color)
+            if err <= 0:
+                y += 1
+                err += d_y
+                d_y += 2
+            if err > 0:
+                x -= 1
+                d_x += 2
+                err += d_x - (radius << 1)
+
     def rect(self, x, y, width, height, color, *, fill=False):
         """Draw a rectangle at the given location, size and color. The ```rect``` method draws only
         a 1 pixel outline."""
