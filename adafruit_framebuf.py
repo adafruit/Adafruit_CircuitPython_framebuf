@@ -396,13 +396,17 @@ class BitmapFont:
         # Note that only fonts up to 8 pixels tall are currently supported.
         try:
             self._font = open(self.font_name, 'rb')
+            self.font_width, self.font_height = struct.unpack('BB', self._font.read(2))
+            # simple font file validation check based on expected file size
+            if 2 + 256 * self.font_width != os.stat(font_name)[6]:
+                raise RuntimeError("Invalid font file: " + font_name)
         except OSError:
             print("Could not find font file", font_name)
             raise
-        self.font_width, self.font_height = struct.unpack('BB', self._font.read(2))
-        # simple font file validation check based on expected file size
-        if 2 + 256 * self.font_width != os.stat(font_name)[6]:
-            raise RuntimeError("Invalid font file: " + font_name)
+        except OverflowError:
+            # os.stat can throw this on boards without long int support
+            # just hope the font file is valid and press on
+            pass
 
     def deinit(self):
         """Close the font file as cleanup."""
