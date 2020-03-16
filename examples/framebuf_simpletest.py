@@ -6,21 +6,23 @@ WIDTH = 32
 HEIGHT = 8
 
 buffer = bytearray(round(WIDTH * HEIGHT / 8))
-fb = adafruit_framebuf.FrameBuffer(buffer, WIDTH, HEIGHT,
-                                   buf_format=adafruit_framebuf.MVLSB)
+fb = adafruit_framebuf.FrameBuffer(
+    buffer, WIDTH, HEIGHT, buf_format=adafruit_framebuf.MVLSB
+)
 
 # Ascii printer for very small framebufs!
 def print_buffer(the_fb):
-    print("." * (the_fb.width+2))
+    print("." * (the_fb.width + 2))
     for y in range(the_fb.height):
-        print(".", end='')
+        print(".", end="")
         for x in range(the_fb.width):
             if fb.pixel(x, y):
-                print("*", end='')
+                print("*", end="")
             else:
-                print(" ", end='')
+                print(" ", end="")
         print(".")
-    print("." * (the_fb.width+2))
+    print("." * (the_fb.width + 2))
+
 
 # Small function to clear the buffer
 def clear_buffer():
@@ -31,7 +33,7 @@ def clear_buffer():
 print("Shapes test: ")
 fb.pixel(3, 5, True)
 fb.rect(0, 0, fb.width, fb.height, True)
-fb.line(1, 1, fb.width-2, fb.height-2, True)
+fb.line(1, 1, fb.width - 2, fb.height - 2, True)
 fb.fill_rect(25, 2, 2, 2, True)
 print_buffer(fb)
 
@@ -45,5 +47,5 @@ print_buffer(fb)
 clear_buffer()
 
 # write some larger text
-fb.text("hello", 8, 0, True, size = 2)
+fb.text("hello", 8, 0, True, size=2)
 print_buffer(fb)
