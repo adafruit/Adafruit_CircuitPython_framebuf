@@ -2,6 +2,7 @@
 # Author: Tony DiCola
 # License: MIT (https://opensource.org/licenses/MIT)
 # Taken from glcdfont.c from Adafruit GFX Arduino library.
+# fmt: off
 FONT = bytes((
     0x00, 0x00, 0x00, 0x00, 0x00,
     0x3E, 0x5B, 0x4F, 0x5B, 0x3E,
@@ -260,12 +261,13 @@ FONT = bytes((
     0x00, 0x3C, 0x3C, 0x3C, 0x3C,
     0x00, 0x00, 0x00, 0x00, 0x00  # #255 NBSP
 ))
+# fmt: on
 
 
-if __name__ == '__main__':
-    with open('font5x8.bin', 'wb') as outfile:
+if __name__ == "__main__":
+    with open("font5x8.bin", "wb") as outfile:
         # Write a byte each for the character width, character height.
         outfile.write(bytes((5, 8)))
         # Now write all of the font character bytes.
         for font_byte in FONT:
-            outfile.write(font_byte.to_bytes(1, 'big'))
+            outfile.write(font_byte.to_bytes(1, "big"))
