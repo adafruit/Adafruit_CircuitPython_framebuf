@@ -359,7 +359,7 @@ class FrameBuffer:
         for chunk in string.split("\n"):
             if not self._font or self._font.font_name != font_name:
                 # load the font!
-                self._font = BitmapFont()
+                self._font = BitmapFont(font_name)
             w = self._font.font_width
             for i, char in enumerate(chunk):
                 self._font.draw_char(
