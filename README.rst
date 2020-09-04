@@ -13,7 +13,7 @@ Introduction
     :target: https://github.com/adafruit/Adafruit_CircuitPython_framebuf/actions/
     :alt: Build Status
 
-CircuitPython frambuf module, based on the Python frambuf module.
+CircuitPython framebuf module, based on the Python framebuf module.
 
 Dependencies
 =============
