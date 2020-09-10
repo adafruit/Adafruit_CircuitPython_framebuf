@@ -25,7 +25,8 @@
 
 CircuitPython pure-python framebuf module, based on the micropython framebuf module.
 
-* Author(s): Kattni Rembor, Tony DiCola, original file created by Damien P. George
+* Author(s): Melissa LeBlanc-Williams, Kattni Rembor, Tony DiCola, original file
+             created by Damien P. George
 
 Implementation Notes
 --------------------
@@ -52,6 +53,7 @@ MVLSB = 0  # Single bit displays (like SSD1306 OLED)
 RGB565 = 1  # 16-bit color displays
 GS4_HMSB = 2  # Unimplemented!
 MHMSB = 3  # Single bit displays like the Sharp Memory
+RGB888 = 4  # Neopixels and Dotstars
 
 
 class MHMSBFormat:
@@ -142,6 +144,46 @@ class MVLSBFormat:
             height -= 1
 
 
+class RGB888Format:
+    """RGB888Format"""
+
+    @staticmethod
+    def set_pixel(framebuf, x, y, color):
+        """Set a given pixel to a color."""
+        index = (y * framebuf.stride + x) * 3
+        framebuf.buf[index : index + 3] = bytes(
+            ((color >> 16) & 255, (color >> 8) & 255, color & 255)
+        )
+
+    @staticmethod
+    def get_pixel(framebuf, x, y):
+        """Get the color of a given pixel"""
+        index = (y * framebuf.stride + x) * 3
+        return (
+            (framebuf.buf[index] << 16)
+            | (framebuf.buf[index + 1] << 8)
+            | framebuf.buf[index + 2]
+        )
+
+    @staticmethod
+    def fill(framebuf, color):
+        """completely fill/clear the buffer with a color"""
+        fill = (color >> 16) & 255, (color >> 8) & 255, color & 255
+        for i in range(0, len(framebuf.buf), 3):
+            framebuf.buf[i : i + 3] = bytes(fill)
+
+    @staticmethod
+    def fill_rect(framebuf, x, y, width, height, color):
+        """Draw a rectangle at the given location, size and color. The ``fill_rect`` method draws
+        both the outline and interior."""
+        # pylint: disable=too-many-arguments
+        fill = (color >> 16) & 255, (color >> 8) & 255, color & 255
+        for _x in range(x, x + width):
+            for _y in range(y, y + height):
+                index = (_y * framebuf.stride + _x) * 3
+                framebuf.buf[index : index + 3] = bytes(fill)
+
+
 class FrameBuffer:
     """FrameBuffer object.
 
@@ -174,6 +216,8 @@ class FrameBuffer:
             self.format = MVLSBFormat()
         elif buf_format == MHMSB:
             self.format = MHMSBFormat()
+        elif buf_format == RGB888:
+            self.format = RGB888Format()
         else:
             raise ValueError("invalid format")
         self._rotation = 0
