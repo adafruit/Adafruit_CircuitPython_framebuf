@@ -404,12 +404,18 @@ class FrameBuffer:
             if not self._font or self._font.font_name != font_name:
                 # load the font!
                 self._font = BitmapFont(font_name)
-            w = self._font.font_width
+            width = self._font.font_width
+            height = self._font.font_height
             for i, char in enumerate(chunk):
-                self._font.draw_char(
-                    char, x + (i * (w + 1)) * size, y, self, color, size=size
-                )
-            y += self._font.font_height * size
+                char_x = x + (i * (width + 1)) * size
+                if (
+                    char_x + (width * size) > 0
+                    and char_x < self.width
+                    and y + (height * size) > 0
+                    and y < self.height
+                ):
+                    self._font.draw_char(char, char_x, y, self, color, size=size)
+            y += height * size
 
     # pylint: enable=too-many-arguments
 
