@@ -422,13 +422,18 @@ class FrameBuffer:
     def image(self, img):
         """Set buffer to value of Python Imaging Library image.  The image should
         be in 1 bit mode and a size equal to the display size."""
+        # determine our effective width/height, taking rotation into account
+        width = self.width
+        height = self.height
+        if self.rotation == 1 or self.rotation == 3:
+            width, height = height, width
         if img.mode != "1":
             raise ValueError("Image must be in mode 1.")
         imwidth, imheight = img.size
-        if imwidth != self.width or imheight != self.height:
+        if imwidth != width or imheight != height:
             raise ValueError(
                 "Image must be same dimensions as display ({0}x{1}).".format(
-                    self.width, self.height
+                    width, height
                 )
             )
         # Grab all the pixels from the image, faster than getpixel.
@@ -437,8 +442,8 @@ class FrameBuffer:
         for i in range(len(self.buf)):
             self.buf[i] = 0
         # Iterate through the pixels
-        for x in range(self.width):  # yes this double loop is slow,
-            for y in range(self.height):  #  but these displays are small!
+        for x in range(width):  # yes this double loop is slow,
+            for y in range(height):  #  but these displays are small!
                 if pixels[(x, y)]:
                     self.pixel(x, y, 1)  # only write if pixel is true
 
