@@ -427,8 +427,12 @@ class FrameBuffer:
         height = self.height
         if self.rotation == 1 or self.rotation == 3:
             width, height = height, width
-        if img.mode != "1":
+
+        if isinstance(self.format, RGB888Format) and img.mode != "RGB":
+            raise ValueError("Image must be in mode RGB.")
+        if isinstance(self.format, (MHMSBFormat, MVLSBFormat)) and img.mode != "1":
             raise ValueError("Image must be in mode 1.")
+
         imwidth, imheight = img.size
         if imwidth != width or imheight != height:
             raise ValueError(
@@ -444,7 +448,9 @@ class FrameBuffer:
         # Iterate through the pixels
         for x in range(width):  # yes this double loop is slow,
             for y in range(height):  #  but these displays are small!
-                if pixels[(x, y)]:
+                if img.mode == "RGB":
+                    self.pixel(x, y, pixels[(x, y)])
+                elif pixels[(x, y)]:
                     self.pixel(x, y, 1)  # only write if pixel is true
 
 
