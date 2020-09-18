@@ -151,9 +151,12 @@ class RGB888Format:
     def set_pixel(framebuf, x, y, color):
         """Set a given pixel to a color."""
         index = (y * framebuf.stride + x) * 3
-        framebuf.buf[index : index + 3] = bytes(
-            ((color >> 16) & 255, (color >> 8) & 255, color & 255)
-        )
+        if isinstance(color, tuple):
+            framebuf.buf[index : index + 3] = bytes(color)
+        else:
+            framebuf.buf[index : index + 3] = bytes(
+                ((color >> 16) & 255, (color >> 8) & 255, color & 255)
+            )
 
     @staticmethod
     def get_pixel(framebuf, x, y):
