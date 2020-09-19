@@ -403,6 +403,12 @@ class FrameBuffer:
 
         Does not break on line going off screen.
         """
+        # determine our effective width/height, taking rotation into account
+        frame_width = self.width
+        frame_height = self.height
+        if self.rotation == 1 or self.rotation == 3:
+            frame_width, frame_height = frame_height, frame_width
+
         for chunk in string.split("\n"):
             if not self._font or self._font.font_name != font_name:
                 # load the font!
@@ -413,9 +419,9 @@ class FrameBuffer:
                 char_x = x + (i * (width + 1)) * size
                 if (
                     char_x + (width * size) > 0
-                    and char_x < self.width
+                    and char_x < frame_width
                     and y + (height * size) > 0
-                    and y < self.height
+                    and y < frame_height
                 ):
                     self._font.draw_char(char, char_x, y, self, color, size=size)
             y += height * size
