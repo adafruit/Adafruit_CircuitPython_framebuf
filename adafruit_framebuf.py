@@ -1,4 +1,6 @@
-# SPDX-FileCopyrightText: 2018 Kattni Rembor for Adafruit Industries
+# SPDX-FileCopyrightText: <text> 2018 Kattni Rembor, Melissa LeBlanc-Williams
+# and Tony DiCola, for Adafruit Industries.
+# Original file created by Damien P. George </text>
 #
 # SPDX-License-Identifier: MIT
 
@@ -7,9 +9,6 @@
 ====================================================
 
 CircuitPython pure-python framebuf module, based on the micropython framebuf module.
-
-* Author(s): Melissa LeBlanc-Williams, Kattni Rembor, Tony DiCola, original file
-             created by Damien P. George
 
 Implementation Notes
 --------------------
