@@ -1,6 +1,8 @@
+# SPDX-FileCopyrightText: 2018 Tony DiCola for Adafruit Industries
+#
+# SPDX-License-Identifier: MIT
+
 # Quick script to convert Adafruit GFX font into binary file.
-# Author: Tony DiCola
-# License: MIT (https://opensource.org/licenses/MIT)
 # Taken from glcdfont.c from Adafruit GFX Arduino library.
 # fmt: off
 FONT = bytes((
