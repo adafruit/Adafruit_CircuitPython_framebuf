@@ -2,8 +2,8 @@
 #
 # SPDX-License-Identifier: MIT
 
-# Quick script to convert Adafruit GFX font into binary file.
-# Taken from glcdfont.c from Adafruit GFX Arduino library.
+""" Quick script to convert Adafruit GFX font into binary file.
+Taken from glcdfont.c from Adafruit GFX Arduino library. """
 # fmt: off
 FONT = bytes((
     0x00, 0x00, 0x00, 0x00, 0x00,
