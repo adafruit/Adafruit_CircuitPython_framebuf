@@ -55,6 +55,11 @@ Usage Example
 
 See example in /examples/framebuf_simpletest.py
 
+Documentation
+=============
+
+API documentation for this library can be found on `Read the Docs <https://circuitpython.readthedocs.io/projects/framebuf/en/latest/>`_.
+
 Contributing
 ============
 
