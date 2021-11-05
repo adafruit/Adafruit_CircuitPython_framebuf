@@ -64,7 +64,7 @@ class MHMSBFormat:
             fill = 0xFF
         else:
             fill = 0x00
-        for i in range(len(framebuf.buf)):
+        for i in range(len(framebuf.buf)):  # pylint: disable=consider-using-enumerate
             framebuf.buf[i] = fill
 
     @staticmethod
@@ -107,7 +107,7 @@ class MVLSBFormat:
             fill = 0xFF
         else:
             fill = 0x00
-        for i in range(len(framebuf.buf)):
+        for i in range(len(framebuf.buf)):  # pylint: disable=consider-using-enumerate
             framebuf.buf[i] = fill
 
     @staticmethod
@@ -388,7 +388,7 @@ class FrameBuffer:
         # determine our effective width/height, taking rotation into account
         frame_width = self.width
         frame_height = self.height
-        if self.rotation == 1 or self.rotation == 3:
+        if self.rotation in (1, 3):
             frame_width, frame_height = frame_height, frame_width
 
         for chunk in string.split("\n"):
@@ -416,7 +416,7 @@ class FrameBuffer:
         # determine our effective width/height, taking rotation into account
         width = self.width
         height = self.height
-        if self.rotation == 1 or self.rotation == 3:
+        if self.rotation in (1, 3):
             width, height = height, width
 
         if isinstance(self.format, RGB888Format) and img.mode != "RGB":
@@ -434,7 +434,7 @@ class FrameBuffer:
         # Grab all the pixels from the image, faster than getpixel.
         pixels = img.load()
         # Clear buffer
-        for i in range(len(self.buf)):
+        for i in range(len(self.buf)):  # pylint: disable=consider-using-enumerate
             self.buf[i] = 0
         # Iterate through the pixels
         for x in range(width):  # yes this double loop is slow,
@@ -469,7 +469,9 @@ class BitmapFont:
         # Open the font file and grab the character width and height values.
         # Note that only fonts up to 8 pixels tall are currently supported.
         try:
-            self._font = open(self.font_name, "rb")
+            self._font = open(  # pylint: disable=consider-using-with
+                self.font_name, "rb"
+            )
             self.font_width, self.font_height = struct.unpack("BB", self._font.read(2))
             # simple font file validation check based on expected file size
             if 2 + 256 * self.font_width != os.stat(font_name)[6]:
