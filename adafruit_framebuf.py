@@ -126,6 +126,59 @@ class MVLSBFormat:
             height -= 1
 
 
+class RGB565Format:
+    """RGB565Format"""
+
+    @staticmethod
+    def color_to_rgb565(color):
+        if isinstance(color, tuple):
+            r = color[0] & 0xf8
+            gh = color[1] >> 5
+            gl = (color[1] << 5) & 0xe0
+            b = color[2] >> 3
+        else:
+            r = (color >> 16) & 0xf8
+            gh = (color >> 13) & 0x07
+            gl = (color >> 5) & 0xe0
+            b = (color >> 3) & 0x1f
+        hi = r + gh
+        lo = gl + b
+        return lo, hi
+
+    @staticmethod
+    def set_pixel(framebuf, x, y, color):
+        """Set a given pixel to a color."""
+        index = (y * framebuf.stride + x) * 2
+        framebuf.buf[index: index+2] = bytes(RGB565Format.color_to_rgb565(color))
+
+    @staticmethod
+    def get_pixel(framebuf, x, y):
+        """Get the color of a given pixel"""
+        index = (y * framebuf.stride + x) * 2
+        cval = framebuf.buf[index] + framebuf.buf[index+1] * 256
+        r = cval >> 11
+        g = (cval & 0x7e) >> 5
+        b = cval & 0x1f
+        return (r << 19) | (g << 10) | (b << 3)
+
+    @staticmethod
+    def fill(framebuf, color):
+        """completely fill/clear the buffer with a color"""
+        rgb565 = RGB565Format.color_to_rgb565(color)
+        for i in range(0, len(framebuf.buf), 2):
+            framebuf.buf[i: i + 2] = bytes(rgb565)
+
+    @staticmethod
+    def fill_rect(framebuf, x, y, width, height, color):
+        """Draw a rectangle at the given location, size and color. The ``fill_rect`` method draws
+        both the outline and interior."""
+        rgb565 = RGB565Format.color_to_rgb565(color)
+        for _x in range(x, x + width):
+            for _y in range(y, y + height):
+                index = (_y * framebuf.stride + _x) * 2
+                framebuf.buf[index: index + 2] = bytes(rgb565)
+
+
 class RGB888Format:
     """RGB888Format"""
 
@@ -203,6 +256,8 @@ class FrameBuffer:
             self.format = MHMSBFormat()
         elif buf_format == RGB888:
             self.format = RGB888Format()
+        elif buf_format == RGB565:
+            self.format = RGB565Format()
         else:
             raise ValueError("invalid format")
         self._rotation = 0
@@ -419,7 +474,7 @@ class FrameBuffer:
         if self.rotation in (1, 3):
             width, height = height, width
 
-        if isinstance(self.format, RGB888Format) and img.mode != "RGB":
+        if isinstance(self.format, (RGB565Format, RGB888Format)) and img.mode != "RGB":
             raise ValueError("Image must be in mode RGB.")
         if isinstance(self.format, (MHMSBFormat, MVLSBFormat)) and img.mode != "1":
             raise ValueError("Image must be in mode 1.")
