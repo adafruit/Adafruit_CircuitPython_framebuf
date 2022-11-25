@@ -127,10 +127,14 @@ class MVLSBFormat:
 
 
 class RGB565Format:
-    """RGB565Format"""
+    """
+    This class implements the RGB565 format
+    It assumes a little-endian byte order in the frame buffer
+    """
 
     @staticmethod
     def color_to_rgb565(color):
+        """Convert a color in either tuple or 24 bit integer form to RGB565, and return as two bytes"""
         if isinstance(color, tuple):
             r = color[0] & 0xf8
             gh = color[1] >> 5
@@ -143,40 +147,37 @@ class RGB565Format:
             b = (color >> 3) & 0x1f
         hi = r + gh
         lo = gl + b
-        return lo, hi
+        return bytes([lo, hi])
 
-    @staticmethod
-    def set_pixel(framebuf, x, y, color):
+    def set_pixel(self, framebuf, x, y, color):
         """Set a given pixel to a color."""
         index = (y * framebuf.stride + x) * 2
-        framebuf.buf[index: index+2] = bytes(RGB565Format.color_to_rgb565(color))
+        framebuf.buf[index: index+2] = self.color_to_rgb565(color)
 
     @staticmethod
     def get_pixel(framebuf, x, y):
         """Get the color of a given pixel"""
         index = (y * framebuf.stride + x) * 2
-        cval = framebuf.buf[index] + framebuf.buf[index+1] * 256
-        r = cval >> 11
-        g = (cval & 0x7e) >> 5
-        b = cval & 0x1f
-        return (r << 19) | (g << 10) | (b << 3)
+        bl, bh = framebuf.buf[index: index+2]
+        r = bh & 0xf8
+        g = ((bh & 0x07) << 5) | ((bl & 0xe0) >> 5)
+        b = (bl & 0x1f) << 3
+        return (r << 16) | (g << 8) | b
 
-    @staticmethod
-    def fill(framebuf, color):
+    def fill(self, framebuf, color):
         """completely fill/clear the buffer with a color"""
-        rgb565 = RGB565Format.color_to_rgb565(color)
+        rgb565_color = self.color_to_rgb565(color)
         for i in range(0, len(framebuf.buf), 2):
-            framebuf.buf[i: i + 2] = bytes(rgb565)
+            framebuf.buf[i: i + 2] = rgb565_color
 
-    @staticmethod
-    def fill_rect(framebuf, x, y, width, height, color):
+    def fill_rect(self, framebuf, x, y, width, height, color):
         """Draw a rectangle at the given location, size and color. The ``fill_rect`` method draws
         both the outline and interior."""
-        rgb565 = RGB565Format.color_to_rgb565(color)
+        rgb565_color = self.color_to_rgb565(color)
         for _x in range(x, x + width):
             for _y in range(y, y + height):
                 index = (_y * framebuf.stride + _x) * 2
-                framebuf.buf[index: index + 2] = bytes(rgb565)
+                framebuf.buf[index: index + 2] = rgb565_color
 
 
 class RGB888Format:
