@@ -134,14 +134,15 @@ class RGB565Format:
 
     @staticmethod
     def color_to_rgb565(color):
-        """Convert a color in either tuple or 24 bit integer form to RGB565, and return as two bytes"""
+        """Convert a color in either tuple or 24 bit integer form to RGB565, and return as two bytes
+        """
         if isinstance(color, tuple):
-            hi = (color[0] & 0xF8) | (color[1] >> 5)
-            lo = ((color[1] << 5) & 0xE0) | (color[2] >> 3)
+            hibyte = (color[0] & 0xF8) | (color[1] >> 5)
+            lobyte = ((color[1] << 5) & 0xE0) | (color[2] >> 3)
         else:
-            hi = ((color >> 16) & 0xF8) | ((color >> 13) & 0x07)
-            lo = ((color >> 5) & 0xE0) | ((color >> 3) & 0x1F)
-        return bytes([lo, hi])
+            hibyte = ((color >> 16) & 0xF8) | ((color >> 13) & 0x07)
+            lobyte = ((color >> 5) & 0xE0) | ((color >> 3) & 0x1F)
+        return bytes([lobyte, hibyte])
 
     def set_pixel(self, framebuf, x, y, color):
         """Set a given pixel to a color."""
@@ -152,10 +153,10 @@ class RGB565Format:
     def get_pixel(framebuf, x, y):
         """Get the color of a given pixel"""
         index = (y * framebuf.stride + x) * 2
-        bl, bh = framebuf.buf[index : index + 2]
-        r = bh & 0xF8
-        g = ((bh & 0x07) << 5) | ((bl & 0xE0) >> 5)
-        b = (bl & 0x1F) << 3
+        lobyte, hibyte = framebuf.buf[index : index + 2]
+        r = hibyte & 0xF8
+        g = ((hibyte & 0x07) << 5) | ((lobyte & 0xE0) >> 5)
+        b = (lobyte & 0x1F) << 3
         return (r << 16) | (g << 8) | b
 
     def fill(self, framebuf, color):
@@ -167,6 +168,7 @@ class RGB565Format:
     def fill_rect(self, framebuf, x, y, width, height, color):
         """Draw a rectangle at the given location, size and color. The ``fill_rect`` method draws
         both the outline and interior."""
+        # pylint: disable=too-many-arguments
         rgb565_color = self.color_to_rgb565(color)
         for _y in range(2 * y, 2 * (y + height), 2):
             offset2 = _y * framebuf.stride
