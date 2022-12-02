@@ -136,17 +136,11 @@ class RGB565Format:
     def color_to_rgb565(color):
         """Convert a color in either tuple or 24 bit integer form to RGB565, and return as two bytes"""
         if isinstance(color, tuple):
-            r = color[0] & 0xF8
-            gh = color[1] >> 5
-            gl = (color[1] << 5) & 0xE0
-            b = color[2] >> 3
+            hi = (color[0] & 0xF8) | (color[1] >> 5)
+            lo = ((color[1] << 5) & 0xE0) | (color[2] >> 3)
         else:
-            r = (color >> 16) & 0xF8
-            gh = (color >> 13) & 0x07
-            gl = (color >> 5) & 0xE0
-            b = (color >> 3) & 0x1F
-        hi = r + gh
-        lo = gl + b
+            hi = ((color >> 16) & 0xF8) | ((color >> 13) & 0x07)
+            lo = ((color >> 5) & 0xE0) | ((color >> 3) & 0x1F)
         return bytes([lo, hi])
 
     def set_pixel(self, framebuf, x, y, color):
@@ -174,9 +168,10 @@ class RGB565Format:
         """Draw a rectangle at the given location, size and color. The ``fill_rect`` method draws
         both the outline and interior."""
         rgb565_color = self.color_to_rgb565(color)
-        for _x in range(x, x + width):
-            for _y in range(y, y + height):
-                index = (_y * framebuf.stride + _x) * 2
+        for _y in range(2 * y, 2 * (y + height), 2):
+            offset2 = _y * framebuf.stride
+            for _x in range(2 * x, 2 * (x + width), 2):
+                index = offset2 + _x
                 framebuf.buf[index : index + 2] = rgb565_color
 
 
