@@ -134,8 +134,8 @@ class RGB565Format:
 
     @staticmethod
     def color_to_rgb565(color):
-        """Convert a color in either tuple or 24 bit integer form to RGB565, and return as two bytes
-        """
+        """Convert a color in either tuple or 24 bit integer form to RGB565,
+        and return as two bytes"""
         if isinstance(color, tuple):
             hibyte = (color[0] & 0xF8) | (color[1] >> 5)
             lobyte = ((color[1] << 5) & 0xE0) | (color[2] >> 3)
