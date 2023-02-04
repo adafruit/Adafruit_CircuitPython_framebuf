@@ -37,19 +37,19 @@ RGB565 = 1  # 16-bit color displays
 GS4_HMSB = 2  # Unimplemented!
 MHMSB = 3  # Single bit displays like the Sharp Memory
 RGB888 = 4  # Neopixels and Dotstars
-GS2_HMSB = 5 # 2-bit color displays like the HT16K33 8x8 Matrix
+GS2_HMSB = 5  # 2-bit color displays like the HT16K33 8x8 Matrix
+
 
 class GS2HMSBFormat:
     """GS2HMSBFormat"""
 
-
     @staticmethod
     def set_pixel(framebuf, x, y, color):
         """Set a given pixel to a color."""
-        index = (y * framebuf.stride + x) >> 2 # why 2?
+        index = (y * framebuf.stride + x) >> 2  # why 2?
         pixel = framebuf.buf[index]
 
-        shift = (x & 0b11) << 1 # why 1?
+        shift = (x & 0b11) << 1  # why 1?
         mask = 0b11 << shift
         color = (color & 0b11) << shift
 
@@ -58,10 +58,10 @@ class GS2HMSBFormat:
     @staticmethod
     def get_pixel(framebuf, x, y):
         """Get the color of a given pixel"""
-        index = (y * framebuf.stride + x) >> 2 # same as // 8? why?
+        index = (y * framebuf.stride + x) >> 2  # same as // 8? why?
         pixel = framebuf.buf[index]
 
-        shift = (x & 0b11) << 1 # why 1?
+        shift = (x & 0b11) << 1  # why 1?
         return (pixel >> shift) & 0b11
 
     @staticmethod
@@ -80,7 +80,7 @@ class GS2HMSBFormat:
         # pylint: disable=too-many-arguments
         for _x in range(x, x + width):
             for _y in range(y, y + height):
-                if _x in [x, x+width] or _y in [y, y+height]:
+                if _x in [x, x + width] or _y in [y, y + height]:
                     GS2HMSBFormat.set_pixel(framebuf, _x, _y, color)
 
     @staticmethod
@@ -90,6 +90,7 @@ class GS2HMSBFormat:
         for _x in range(x, x + width):
             for _y in range(y, y + height):
                 GS2HMSBFormat.set_pixel(framebuf, _x, _y, color)
+
 
 class MHMSBFormat:
     """MHMSBFormat"""
