@@ -77,17 +77,19 @@ class GS2HMSBFormat:
     @staticmethod
     def rect(framebuf, x, y, width, height, color):
         """Draw the outline of a rectangle at the given location, size and color."""
-        for xx in range(x, x + width):
-            for yy in range(y, y + height):
-                if xx in [x, x+width] or yy in [y, y+height]:
-                    GS2HMSBFormat.set_pixel(framebuf, xx, yy, color)
+        # pylint: disable=too-many-arguments
+        for _x in range(x, x + width):
+            for _y in range(y, y + height):
+                if _x in [x, x+width] or _y in [y, y+height]:
+                    GS2HMSBFormat.set_pixel(framebuf, _x, _y, color)
 
     @staticmethod
     def fill_rect(framebuf, x, y, width, height, color):
-        """Draw both the outline and interior of a rectangle at the given location, size and color."""
-        for xx in range(x, x + width):
-            for yy in range(y, y + height):
-                GS2HMSBFormat.set_pixel(framebuf, xx, yy, color)
+        """Draw the outline and interior of a rectangle at the given location, size and color."""
+        # pylint: disable=too-many-arguments
+        for _x in range(x, x + width):
+            for _y in range(y, y + height):
+                GS2HMSBFormat.set_pixel(framebuf, _x, _y, color)
 
 class MHMSBFormat:
     """MHMSBFormat"""
