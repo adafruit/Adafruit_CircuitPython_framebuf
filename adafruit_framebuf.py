@@ -68,7 +68,8 @@ class GS2HMSBFormat:
     def fill(framebuf, color):
         """completely fill/clear the buffer with a color"""
         if color:
-            fill = color & 0b11
+            bits = (color & 0b11)
+            fill = (bits << 6) | (bits << 4) | (bits << 2) | (bits << 0)
         else:
             fill = 0x00
         for i in range(len(framebuf.buf)):  # pylint: disable=consider-using-enumerate
