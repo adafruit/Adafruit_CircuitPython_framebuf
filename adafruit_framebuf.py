@@ -68,7 +68,7 @@ class GS2HMSBFormat:
     def fill(framebuf, color):
         """completely fill/clear the buffer with a color"""
         if color:
-            bits = (color & 0b11)
+            bits = color & 0b11
             fill = (bits << 6) | (bits << 4) | (bits << 2) | (bits << 0)
         else:
             fill = 0x00
@@ -537,9 +537,7 @@ class FrameBuffer:
         imwidth, imheight = img.size
         if imwidth != width or imheight != height:
             raise ValueError(
-                "Image must be same dimensions as display ({0}x{1}).".format(
-                    width, height
-                )
+                f"Image must be same dimensions as display ({width}x{height})."
             )
         # Grab all the pixels from the image, faster than getpixel.
         pixels = img.load()
