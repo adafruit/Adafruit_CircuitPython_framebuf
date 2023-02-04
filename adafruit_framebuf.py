@@ -46,10 +46,10 @@ class GS2HMSBFormat:
     @staticmethod
     def set_pixel(framebuf, x, y, color):
         """Set a given pixel to a color."""
-        index = (y * framebuf.stride + x) >> 2  # why 2?
+        index = (y * framebuf.stride + x) >> 2
         pixel = framebuf.buf[index]
 
-        shift = (x & 0b11) << 1  # why 1?
+        shift = (x & 0b11) << 1
         mask = 0b11 << shift
         color = (color & 0b11) << shift
 
@@ -58,10 +58,10 @@ class GS2HMSBFormat:
     @staticmethod
     def get_pixel(framebuf, x, y):
         """Get the color of a given pixel"""
-        index = (y * framebuf.stride + x) >> 2  # same as // 8? why?
+        index = (y * framebuf.stride + x) >> 2
         pixel = framebuf.buf[index]
 
-        shift = (x & 0b11) << 1  # why 1?
+        shift = (x & 0b11) << 1
         return (pixel >> shift) & 0b11
 
     @staticmethod
