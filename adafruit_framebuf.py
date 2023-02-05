@@ -73,7 +73,7 @@ class GS2HMSBFormat:
         else:
             fill = 0x00
 
-        framebuf.buf = [ fill for i in range(len(framebuf.buf)) ]
+        framebuf.buf = [fill for i in range(len(framebuf.buf))]
 
     @staticmethod
     def rect(framebuf, x, y, width, height, color):
