@@ -16,6 +16,7 @@ Implementation Notes
 **Hardware:**
 
 * `Adafruit SSD1306 OLED displays <https://www.adafruit.com/?q=ssd1306>`_
+* `Adafruit HT16K33 Matrix displays <https://www.adafruit.com/?q=ht16k33>`_
 
 **Software and Dependencies:**
 
@@ -36,6 +37,60 @@ RGB565 = 1  # 16-bit color displays
 GS4_HMSB = 2  # Unimplemented!
 MHMSB = 3  # Single bit displays like the Sharp Memory
 RGB888 = 4  # Neopixels and Dotstars
+GS2_HMSB = 5  # 2-bit color displays like the HT16K33 8x8 Matrix
+
+
+class GS2HMSBFormat:
+    """GS2HMSBFormat"""
+
+    @staticmethod
+    def set_pixel(framebuf, x, y, color):
+        """Set a given pixel to a color."""
+        index = (y * framebuf.stride + x) >> 2
+        pixel = framebuf.buf[index]
+
+        shift = (x & 0b11) << 1
+        mask = 0b11 << shift
+        color = (color & 0b11) << shift
+
+        framebuf.buf[index] = color | (pixel & (~mask))
+
+    @staticmethod
+    def get_pixel(framebuf, x, y):
+        """Get the color of a given pixel"""
+        index = (y * framebuf.stride + x) >> 2
+        pixel = framebuf.buf[index]
+
+        shift = (x & 0b11) << 1
+        return (pixel >> shift) & 0b11
+
+    @staticmethod
+    def fill(framebuf, color):
+        """completely fill/clear the buffer with a color"""
+        if color:
+            bits = color & 0b11
+            fill = (bits << 6) | (bits << 4) | (bits << 2) | (bits << 0)
+        else:
+            fill = 0x00
+
+        framebuf.buf = [fill for i in range(len(framebuf.buf))]
+
+    @staticmethod
+    def rect(framebuf, x, y, width, height, color):
+        """Draw the outline of a rectangle at the given location, size and color."""
+        # pylint: disable=too-many-arguments
+        for _x in range(x, x + width):
+            for _y in range(y, y + height):
+                if _x in [x, x + width] or _y in [y, y + height]:
+                    GS2HMSBFormat.set_pixel(framebuf, _x, _y, color)
+
+    @staticmethod
+    def fill_rect(framebuf, x, y, width, height, color):
+        """Draw the outline and interior of a rectangle at the given location, size and color."""
+        # pylint: disable=too-many-arguments
+        for _x in range(x, x + width):
+            for _y in range(y, y + height):
+                GS2HMSBFormat.set_pixel(framebuf, _x, _y, color)
 
 
 class MHMSBFormat:
@@ -256,6 +311,8 @@ class FrameBuffer:
             self.format = RGB888Format()
         elif buf_format == RGB565:
             self.format = RGB565Format()
+        elif buf_format == GS2_HMSB:
+            self.format = GS2HMSBFormat()
         else:
             raise ValueError("invalid format")
         self._rotation = 0
@@ -480,9 +537,7 @@ class FrameBuffer:
         imwidth, imheight = img.size
         if imwidth != width or imheight != height:
             raise ValueError(
-                "Image must be same dimensions as display ({0}x{1}).".format(
-                    width, height
-                )
+                f"Image must be same dimensions as display ({width}x{height})."
             )
         # Grab all the pixels from the image, faster than getpixel.
         pixels = img.load()
