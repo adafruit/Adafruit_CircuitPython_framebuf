@@ -1551,6 +1551,6 @@ if __name__ == "__main__":
         # Write a byte each for the character width, character height.
         outfile.write(bytes((WIDTH, HEIGHT)))
         # Now write all of the font character bytes.
-        for str in FONT:
-            data = int(str.replace(".", "0").replace("#", "1"), 2)
-            outfile.write(data.to_bytes(1, "big"))
+        for string in FONT:
+            DATA = int(string.replace(".", "0").replace("#", "1"), 2)
+            outfile.write(DATA.to_bytes(1, "big"))
