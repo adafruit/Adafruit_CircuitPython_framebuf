@@ -1,6 +1,7 @@
 # SPDX-FileCopyrightText: 2021 ladyada for Adafruit Industries
 # SPDX-License-Identifier: MIT
 
+import math
 import adafruit_framebuf
 
 print("framebuf test will draw to the REPL")
@@ -8,10 +9,11 @@ print("framebuf test will draw to the REPL")
 WIDTH = 32
 HEIGHT = 8
 
-buffer = bytearray(round(WIDTH * HEIGHT / 8))
+buffer = bytearray(round(WIDTH * math.ceil(HEIGHT / 8)))
 fb = adafruit_framebuf.FrameBuffer(
     buffer, WIDTH, HEIGHT, buf_format=adafruit_framebuf.MVLSB
 )
+
 
 # Ascii printer for very small framebufs!
 def print_buffer(the_fb):
