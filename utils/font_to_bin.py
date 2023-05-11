@@ -2572,7 +2572,6 @@ FONT = (  # Code Page 437 https://www.ascii-codes.com/
 # fmt: on
 
 if __name__ == "__main__":
-
     # Rotate all character to be able to generate the correct data
     rotated_font = []
     char = []
