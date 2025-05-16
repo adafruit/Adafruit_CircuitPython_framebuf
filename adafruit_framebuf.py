@@ -78,16 +78,14 @@ class GS2HMSBFormat:
     @staticmethod
     def rect(framebuf, x, y, width, height, color):
         """Draw the outline of a rectangle at the given location, size and color."""
-        # pylint: disable=too-many-arguments
         for _x in range(x, x + width):
             for _y in range(y, y + height):
-                if _x in [x, x + width] or _y in [y, y + height]:
+                if _x in {x, x + width} or _y in {y, y + height}:
                     GS2HMSBFormat.set_pixel(framebuf, _x, _y, color)
 
     @staticmethod
     def fill_rect(framebuf, x, y, width, height, color):
         """Draw the outline and interior of a rectangle at the given location, size and color."""
-        # pylint: disable=too-many-arguments
         for _x in range(x, x + width):
             for _y in range(y, y + height):
                 GS2HMSBFormat.set_pixel(framebuf, _x, _y, color)
@@ -101,9 +99,7 @@ class MHMSBFormat:
         """Set a given pixel to a color."""
         index = (y * framebuf.stride + x) // 8
         offset = 7 - x & 0x07
-        framebuf.buf[index] = (framebuf.buf[index] & ~(0x01 << offset)) | (
-            (color != 0) << offset
-        )
+        framebuf.buf[index] = (framebuf.buf[index] & ~(0x01 << offset)) | ((color != 0) << offset)
 
     @staticmethod
     def get_pixel(framebuf, x, y):
@@ -119,14 +115,13 @@ class MHMSBFormat:
             fill = 0xFF
         else:
             fill = 0x00
-        for i in range(len(framebuf.buf)):  # pylint: disable=consider-using-enumerate
+        for i in range(len(framebuf.buf)):
             framebuf.buf[i] = fill
 
     @staticmethod
     def fill_rect(framebuf, x, y, width, height, color):
         """Draw a rectangle at the given location, size and color. The ``fill_rect`` method draws
         both the outline and interior."""
-        # pylint: disable=too-many-arguments
         for _x in range(x, x + width):
             offset = 7 - _x & 0x07
             for _y in range(y, y + height):
@@ -144,9 +139,7 @@ class MVLSBFormat:
         """Set a given pixel to a color."""
         index = (y >> 3) * framebuf.stride + x
         offset = y & 0x07
-        framebuf.buf[index] = (framebuf.buf[index] & ~(0x01 << offset)) | (
-            (color != 0) << offset
-        )
+        framebuf.buf[index] = (framebuf.buf[index] & ~(0x01 << offset)) | ((color != 0) << offset)
 
     @staticmethod
     def get_pixel(framebuf, x, y):
@@ -162,21 +155,20 @@ class MVLSBFormat:
             fill = 0xFF
         else:
             fill = 0x00
-        for i in range(len(framebuf.buf)):  # pylint: disable=consider-using-enumerate
+        for i in range(len(framebuf.buf)):
             framebuf.buf[i] = fill
 
     @staticmethod
     def fill_rect(framebuf, x, y, width, height, color):
         """Draw a rectangle at the given location, size and color. The ``fill_rect`` method draws
         both the outline and interior."""
-        # pylint: disable=too-many-arguments
         while height > 0:
             index = (y >> 3) * framebuf.stride + x
             offset = y & 0x07
             for w_w in range(width):
-                framebuf.buf[index + w_w] = (
-                    framebuf.buf[index + w_w] & ~(0x01 << offset)
-                ) | ((color != 0) << offset)
+                framebuf.buf[index + w_w] = (framebuf.buf[index + w_w] & ~(0x01 << offset)) | (
+                    (color != 0) << offset
+                )
             y += 1
             height -= 1
 
@@ -223,7 +215,6 @@ class RGB565Format:
     def fill_rect(self, framebuf, x, y, width, height, color):
         """Draw a rectangle at the given location, size and color. The ``fill_rect`` method draws
         both the outline and interior."""
-        # pylint: disable=too-many-arguments
         rgb565_color = self.color_to_rgb565(color)
         for _y in range(2 * y, 2 * (y + height), 2):
             offset2 = _y * framebuf.stride
@@ -251,9 +242,7 @@ class RGB888Format:
         """Get the color of a given pixel"""
         index = (y * framebuf.stride + x) * 3
         return (
-            (framebuf.buf[index] << 16)
-            | (framebuf.buf[index + 1] << 8)
-            | framebuf.buf[index + 2]
+            (framebuf.buf[index] << 16) | (framebuf.buf[index + 1] << 8) | framebuf.buf[index + 2]
         )
 
     @staticmethod
@@ -267,7 +256,6 @@ class RGB888Format:
     def fill_rect(framebuf, x, y, width, height, color):
         """Draw a rectangle at the given location, size and color. The ``fill_rect`` method draws
         both the outline and interior."""
-        # pylint: disable=too-many-arguments
         fill = (color >> 16) & 255, (color >> 8) & 255, color & 255
         for _x in range(x, x + width):
             for _y in range(y, y + height):
@@ -295,7 +283,6 @@ class FrameBuffer:
     """
 
     def __init__(self, buf, width, height, buf_format=MVLSB, stride=None):
-        # pylint: disable=too-many-arguments
         self.buf = buf
         self.width = width
         self.height = height
@@ -324,7 +311,7 @@ class FrameBuffer:
 
     @rotation.setter
     def rotation(self, val):
-        if not val in (0, 1, 2, 3):
+        if val not in {0, 1, 2, 3}:
             raise RuntimeError("Bad rotation setting")
         self._rotation = val
 
@@ -335,7 +322,6 @@ class FrameBuffer:
     def fill_rect(self, x, y, width, height, color):
         """Draw a rectangle at the given location, size and color. The ``fill_rect`` method draws
         both the outline and interior."""
-        # pylint: disable=too-many-arguments, too-many-boolean-expressions
         self.rect(x, y, width, height, color, fill=True)
 
     def pixel(self, x, y, color=None):
@@ -408,7 +394,6 @@ class FrameBuffer:
             width, height = height, width
             y = self.height - y - height
 
-        # pylint: disable=too-many-boolean-expressions
         if (
             width < 1
             or height < 1
@@ -431,7 +416,6 @@ class FrameBuffer:
             self.format.fill_rect(self, x_end, y, 1, y_end - y + 1, color)
 
     def line(self, x_0, y_0, x_1, y_1, color):
-        # pylint: disable=too-many-arguments
         """Bresenham's line algorithm"""
         d_x = abs(x_1 - x_0)
         d_y = abs(y_1 - y_0)
@@ -489,7 +473,6 @@ class FrameBuffer:
                 x += dt_x
             y += dt_y
 
-    # pylint: disable=too-many-arguments
     def text(self, string, x, y, color, *, font_name="font5x8.bin", size=1):
         """Place text on the screen in variables sizes. Breaks on \n to next line.
 
@@ -498,7 +481,7 @@ class FrameBuffer:
         # determine our effective width/height, taking rotation into account
         frame_width = self.width
         frame_height = self.height
-        if self.rotation in (1, 3):
+        if self.rotation in {1, 3}:
             frame_width, frame_height = frame_height, frame_width
 
         for chunk in string.split("\n"):
@@ -518,15 +501,13 @@ class FrameBuffer:
                     self._font.draw_char(char, char_x, y, self, color, size=size)
             y += height * size
 
-    # pylint: enable=too-many-arguments
-
     def image(self, img):
         """Set buffer to value of Python Imaging Library image.  The image should
         be in 1 bit mode and a size equal to the display size."""
         # determine our effective width/height, taking rotation into account
         width = self.width
         height = self.height
-        if self.rotation in (1, 3):
+        if self.rotation in {1, 3}:
             width, height = height, width
 
         if isinstance(self.format, (RGB565Format, RGB888Format)) and img.mode != "RGB":
@@ -536,13 +517,11 @@ class FrameBuffer:
 
         imwidth, imheight = img.size
         if imwidth != width or imheight != height:
-            raise ValueError(
-                f"Image must be same dimensions as display ({width}x{height})."
-            )
+            raise ValueError(f"Image must be same dimensions as display ({width}x{height}).")
         # Grab all the pixels from the image, faster than getpixel.
         pixels = img.load()
         # Clear buffer
-        for i in range(len(self.buf)):  # pylint: disable=consider-using-enumerate
+        for i in range(len(self.buf)):
             self.buf[i] = 0
         # Iterate through the pixels
         for x in range(width):  # yes this double loop is slow,
@@ -577,9 +556,7 @@ class BitmapFont:
         # Open the font file and grab the character width and height values.
         # Note that only fonts up to 8 pixels tall are currently supported.
         try:
-            self._font = open(  # pylint: disable=consider-using-with
-                self.font_name, "rb"
-            )
+            self._font = open(self.font_name, "rb")
             self.font_width, self.font_height = struct.unpack("BB", self._font.read(2))
             # simple font file validation check based on expected file size
             if 2 + 256 * self.font_width != os.stat(font_name)[6]:
@@ -605,9 +582,7 @@ class BitmapFont:
         """cleanup on exit"""
         self.deinit()
 
-    def draw_char(
-        self, char, x, y, framebuffer, color, size=1
-    ):  # pylint: disable=too-many-arguments
+    def draw_char(self, char, x, y, framebuffer, color, size=1):
         """Draw one character at position (x,y) to a framebuffer in a given color"""
         size = max(size, 1)
         # Don't draw the character if it will be clipped off the visible area.
@@ -626,14 +601,12 @@ class BitmapFont:
             for char_y in range(self.font_height):
                 # Draw a pixel for each bit that's flipped on.
                 if (line >> char_y) & 0x1:
-                    framebuffer.fill_rect(
-                        x + char_x * size, y + char_y * size, size, size, color
-                    )
+                    framebuffer.fill_rect(x + char_x * size, y + char_y * size, size, size, color)
 
     def width(self, text):
         """Return the pixel width of the specified text message."""
         return len(text) * (self.font_width + 1)
 
 
-class FrameBuffer1(FrameBuffer):  # pylint: disable=abstract-method
+class FrameBuffer1(FrameBuffer):
     """FrameBuffer1 object. Inherits from FrameBuffer."""
