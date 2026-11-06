@@ -37,7 +37,8 @@ class TypeAnnotationTest(unittest.TestCase):
                 for func in _unwrap(attr):
                     sig = inspect.signature(func)
                     unannotated = [
-                        p for p in sig.parameters.values()
+                        p
+                        for p in sig.parameters.values()
                         if p.name != "self" and p.annotation is inspect.Parameter.empty
                     ]
                     if sig.return_annotation is inspect.Signature.empty or unannotated:
