@@ -31,6 +31,11 @@ __repo__ = "https://github.com/adafruit/Adafruit_CircuitPython_framebuf.git"
 import os
 import struct
 
+try:
+    from typing import Any, Optional, Tuple, Union
+except ImportError:
+    pass
+
 # Framebuf format constants:
 MVLSB = 0  # Single bit displays (like SSD1306 OLED)
 RGB565 = 1  # 16-bit color displays
@@ -44,7 +49,7 @@ class GS2HMSBFormat:
     """GS2HMSBFormat"""
 
     @staticmethod
-    def set_pixel(framebuf, x, y, color):
+    def set_pixel(framebuf: "FrameBuffer", x: int, y: int, color: int) -> None:
         """Set a given pixel to a color."""
         index = (y * framebuf.stride + x) >> 2
         pixel = framebuf.buf[index]
@@ -56,7 +61,7 @@ class GS2HMSBFormat:
         framebuf.buf[index] = color | (pixel & (~mask))
 
     @staticmethod
-    def get_pixel(framebuf, x, y):
+    def get_pixel(framebuf: "FrameBuffer", x: int, y: int) -> int:
         """Get the color of a given pixel"""
         index = (y * framebuf.stride + x) >> 2
         pixel = framebuf.buf[index]
@@ -65,7 +70,7 @@ class GS2HMSBFormat:
         return (pixel >> shift) & 0b11
 
     @staticmethod
-    def fill(framebuf, color):
+    def fill(framebuf: "FrameBuffer", color: int) -> None:
         """completely fill/clear the buffer with a color"""
         if color:
             bits = color & 0b11
@@ -76,7 +81,7 @@ class GS2HMSBFormat:
         framebuf.buf = [fill for i in range(len(framebuf.buf))]
 
     @staticmethod
-    def rect(framebuf, x, y, width, height, color):
+    def rect(framebuf: "FrameBuffer", x: int, y: int, width: int, height: int, color: int) -> None:
         """Draw the outline of a rectangle at the given location, size and color."""
         for _x in range(x, x + width):
             for _y in range(y, y + height):
@@ -84,7 +89,9 @@ class GS2HMSBFormat:
                     GS2HMSBFormat.set_pixel(framebuf, _x, _y, color)
 
     @staticmethod
-    def fill_rect(framebuf, x, y, width, height, color):
+    def fill_rect(
+        framebuf: "FrameBuffer", x: int, y: int, width: int, height: int, color: int
+    ) -> None:
         """Draw the outline and interior of a rectangle at the given location, size and color."""
         for _x in range(x, x + width):
             for _y in range(y, y + height):
@@ -95,21 +102,21 @@ class MHMSBFormat:
     """MHMSBFormat"""
 
     @staticmethod
-    def set_pixel(framebuf, x, y, color):
+    def set_pixel(framebuf: "FrameBuffer", x: int, y: int, color: int) -> None:
         """Set a given pixel to a color."""
         index = (y * framebuf.stride + x) // 8
         offset = 7 - x & 0x07
         framebuf.buf[index] = (framebuf.buf[index] & ~(0x01 << offset)) | ((color != 0) << offset)
 
     @staticmethod
-    def get_pixel(framebuf, x, y):
+    def get_pixel(framebuf: "FrameBuffer", x: int, y: int) -> int:
         """Get the color of a given pixel"""
         index = (y * framebuf.stride + x) // 8
         offset = 7 - x & 0x07
         return (framebuf.buf[index] >> offset) & 0x01
 
     @staticmethod
-    def fill(framebuf, color):
+    def fill(framebuf: "FrameBuffer", color: int) -> None:
         """completely fill/clear the buffer with a color"""
         if color:
             fill = 0xFF
@@ -119,7 +126,9 @@ class MHMSBFormat:
             framebuf.buf[i] = fill
 
     @staticmethod
-    def fill_rect(framebuf, x, y, width, height, color):
+    def fill_rect(
+        framebuf: "FrameBuffer", x: int, y: int, width: int, height: int, color: int
+    ) -> None:
         """Draw a rectangle at the given location, size and color. The ``fill_rect`` method draws
         both the outline and interior."""
         for _x in range(x, x + width):
@@ -135,21 +144,21 @@ class MVLSBFormat:
     """MVLSBFormat"""
 
     @staticmethod
-    def set_pixel(framebuf, x, y, color):
+    def set_pixel(framebuf: "FrameBuffer", x: int, y: int, color: int) -> None:
         """Set a given pixel to a color."""
         index = (y >> 3) * framebuf.stride + x
         offset = y & 0x07
         framebuf.buf[index] = (framebuf.buf[index] & ~(0x01 << offset)) | ((color != 0) << offset)
 
     @staticmethod
-    def get_pixel(framebuf, x, y):
+    def get_pixel(framebuf: "FrameBuffer", x: int, y: int) -> int:
         """Get the color of a given pixel"""
         index = (y >> 3) * framebuf.stride + x
         offset = y & 0x07
         return (framebuf.buf[index] >> offset) & 0x01
 
     @staticmethod
-    def fill(framebuf, color):
+    def fill(framebuf: "FrameBuffer", color: int) -> None:
         """completely fill/clear the buffer with a color"""
         if color:
             fill = 0xFF
@@ -159,7 +168,9 @@ class MVLSBFormat:
             framebuf.buf[i] = fill
 
     @staticmethod
-    def fill_rect(framebuf, x, y, width, height, color):
+    def fill_rect(
+        framebuf: "FrameBuffer", x: int, y: int, width: int, height: int, color: int
+    ) -> None:
         """Draw a rectangle at the given location, size and color. The ``fill_rect`` method draws
         both the outline and interior."""
         while height > 0:
@@ -180,7 +191,7 @@ class RGB565Format:
     """
 
     @staticmethod
-    def color_to_rgb565(color):
+    def color_to_rgb565(color: Union[int, Tuple[int, int, int]]) -> bytes:
         """Convert a color in either tuple or 24 bit integer form to RGB565,
         and return as two bytes"""
         if isinstance(color, tuple):
@@ -191,13 +202,19 @@ class RGB565Format:
             lobyte = ((color >> 5) & 0xE0) | ((color >> 3) & 0x1F)
         return bytes([lobyte, hibyte])
 
-    def set_pixel(self, framebuf, x, y, color):
+    def set_pixel(
+        self,
+        framebuf: "FrameBuffer",
+        x: int,
+        y: int,
+        color: Union[int, Tuple[int, int, int]],
+    ) -> None:
         """Set a given pixel to a color."""
         index = (y * framebuf.stride + x) * 2
         framebuf.buf[index : index + 2] = self.color_to_rgb565(color)
 
     @staticmethod
-    def get_pixel(framebuf, x, y):
+    def get_pixel(framebuf: "FrameBuffer", x: int, y: int) -> int:
         """Get the color of a given pixel"""
         index = (y * framebuf.stride + x) * 2
         lobyte, hibyte = framebuf.buf[index : index + 2]
@@ -206,13 +223,21 @@ class RGB565Format:
         b = (lobyte & 0x1F) << 3
         return (r << 16) | (g << 8) | b
 
-    def fill(self, framebuf, color):
+    def fill(self, framebuf: "FrameBuffer", color: Union[int, Tuple[int, int, int]]) -> None:
         """completely fill/clear the buffer with a color"""
         rgb565_color = self.color_to_rgb565(color)
         for i in range(0, len(framebuf.buf), 2):
             framebuf.buf[i : i + 2] = rgb565_color
 
-    def fill_rect(self, framebuf, x, y, width, height, color):
+    def fill_rect(
+        self,
+        framebuf: "FrameBuffer",
+        x: int,
+        y: int,
+        width: int,
+        height: int,
+        color: Union[int, Tuple[int, int, int]],
+    ) -> None:
         """Draw a rectangle at the given location, size and color. The ``fill_rect`` method draws
         both the outline and interior."""
         rgb565_color = self.color_to_rgb565(color)
@@ -227,7 +252,9 @@ class RGB888Format:
     """RGB888Format"""
 
     @staticmethod
-    def set_pixel(framebuf, x, y, color):
+    def set_pixel(
+        framebuf: "FrameBuffer", x: int, y: int, color: Union[int, Tuple[int, int, int]]
+    ) -> None:
         """Set a given pixel to a color."""
         index = (y * framebuf.stride + x) * 3
         if isinstance(color, tuple):
@@ -238,7 +265,7 @@ class RGB888Format:
             )
 
     @staticmethod
-    def get_pixel(framebuf, x, y):
+    def get_pixel(framebuf: "FrameBuffer", x: int, y: int) -> int:
         """Get the color of a given pixel"""
         index = (y * framebuf.stride + x) * 3
         return (
@@ -246,14 +273,16 @@ class RGB888Format:
         )
 
     @staticmethod
-    def fill(framebuf, color):
+    def fill(framebuf: "FrameBuffer", color: int) -> None:
         """completely fill/clear the buffer with a color"""
         fill = (color >> 16) & 255, (color >> 8) & 255, color & 255
         for i in range(0, len(framebuf.buf), 3):
             framebuf.buf[i : i + 3] = bytes(fill)
 
     @staticmethod
-    def fill_rect(framebuf, x, y, width, height, color):
+    def fill_rect(
+        framebuf: "FrameBuffer", x: int, y: int, width: int, height: int, color: int
+    ) -> None:
         """Draw a rectangle at the given location, size and color. The ``fill_rect`` method draws
         both the outline and interior."""
         fill = (color >> 16) & 255, (color >> 8) & 255, color & 255
@@ -282,7 +311,14 @@ class FrameBuffer:
 
     """
 
-    def __init__(self, buf, width, height, buf_format=MVLSB, stride=None):
+    def __init__(
+        self,
+        buf: Any,
+        width: int,
+        height: int,
+        buf_format: int = MVLSB,
+        stride: Optional[int] = None,
+    ) -> None:
         self.buf = buf
         self.width = width
         self.height = height
@@ -305,26 +341,26 @@ class FrameBuffer:
         self._rotation = 0
 
     @property
-    def rotation(self):
+    def rotation(self) -> int:
         """The rotation setting of the display, can be one of (0, 1, 2, 3)"""
         return self._rotation
 
     @rotation.setter
-    def rotation(self, val):
+    def rotation(self, val: int) -> None:
         if val not in {0, 1, 2, 3}:
             raise RuntimeError("Bad rotation setting")
         self._rotation = val
 
-    def fill(self, color):
+    def fill(self, color: int) -> None:
         """Fill the entire FrameBuffer with the specified color."""
         self.format.fill(self, color)
 
-    def fill_rect(self, x, y, width, height, color):
+    def fill_rect(self, x: int, y: int, width: int, height: int, color: int) -> None:
         """Draw a rectangle at the given location, size and color. The ``fill_rect`` method draws
         both the outline and interior."""
         self.rect(x, y, width, height, color, fill=True)
 
-    def pixel(self, x, y, color=None):
+    def pixel(self, x: int, y: int, color: Optional[int] = None) -> Optional[int]:
         """If ``color`` is not given, get the color value of the specified pixel. If ``color`` is
         given, set the specified pixel to the given color."""
         if self.rotation == 1:
@@ -344,15 +380,15 @@ class FrameBuffer:
         self.format.set_pixel(self, x, y, color)
         return None
 
-    def hline(self, x, y, width, color):
+    def hline(self, x: int, y: int, width: int, color: int) -> None:
         """Draw a horizontal line up to a given length."""
         self.rect(x, y, width, 1, color, fill=True)
 
-    def vline(self, x, y, height, color):
+    def vline(self, x: int, y: int, height: int, color: int) -> None:
         """Draw a vertical line up to a given length."""
         self.rect(x, y, 1, height, color, fill=True)
 
-    def circle(self, center_x, center_y, radius, color):
+    def circle(self, center_x: int, center_y: int, radius: int, color: int) -> None:
         """Draw a circle at the given midpoint location, radius and color.
         The ```circle``` method draws only a 1 pixel outline."""
         x = radius - 1
@@ -378,7 +414,9 @@ class FrameBuffer:
                 d_x += 2
                 err += d_x - (radius << 1)
 
-    def rect(self, x, y, width, height, color, *, fill=False):
+    def rect(
+        self, x: int, y: int, width: int, height: int, color: int, *, fill: bool = False
+    ) -> None:
         """Draw a rectangle at the given location, size and color. The ```rect``` method draws only
         a 1 pixel outline."""
         # pylint: disable=too-many-arguments
@@ -415,7 +453,7 @@ class FrameBuffer:
             self.format.fill_rect(self, x, y_end, x_end - x + 1, 1, color)
             self.format.fill_rect(self, x_end, y, 1, y_end - y + 1, color)
 
-    def line(self, x_0, y_0, x_1, y_1, color):
+    def line(self, x_0: int, y_0: int, x_1: int, y_1: int, color: int) -> None:
         """Bresenham's line algorithm"""
         d_x = abs(x_1 - x_0)
         d_y = abs(y_1 - y_0)
@@ -442,11 +480,11 @@ class FrameBuffer:
                 y += s_y
         self.pixel(x, y, color)
 
-    def blit(self):
+    def blit(self) -> None:
         """blit is not yet implemented"""
         raise NotImplementedError()
 
-    def scroll(self, delta_x, delta_y):
+    def scroll(self, delta_x: int, delta_y: int) -> None:
         """shifts framebuf in x and y direction"""
         if delta_x < 0:
             shift_x = 0
@@ -473,7 +511,16 @@ class FrameBuffer:
                 x += dt_x
             y += dt_y
 
-    def text(self, string, x, y, color, *, font_name="font5x8.bin", size=1):
+    def text(
+        self,
+        string: str,
+        x: int,
+        y: int,
+        color: int,
+        *,
+        font_name: str = "font5x8.bin",
+        size: int = 1,
+    ) -> None:
         """Place text on the screen in variables sizes. Breaks on \n to next line.
 
         Does not break on line going off screen.
@@ -501,7 +548,7 @@ class FrameBuffer:
                     self._font.draw_char(char, char_x, y, self, color, size=size)
             y += height * size
 
-    def image(self, img):
+    def image(self, img: Any) -> None:
         """Set buffer to value of Python Imaging Library image.  The image should
         be in 1 bit mode and a size equal to the display size."""
         # determine our effective width/height, taking rotation into account
@@ -540,7 +587,7 @@ class BitmapFont:
     file to display in a framebuffer. We use file access so we dont waste 1KB
     of RAM on a font!"""
 
-    def __init__(self, font_name="font5x8.bin"):
+    def __init__(self, font_name: str = "font5x8.bin") -> None:
         # Specify the drawing area width and height, and the pixel function to
         # call when drawing pixels (should take an x and y param at least).
         # Optionally specify font_name to override the font file to use (default
@@ -569,20 +616,28 @@ class BitmapFont:
             # just hope the font file is valid and press on
             pass
 
-    def deinit(self):
+    def deinit(self) -> None:
         """Close the font file as cleanup."""
         self._font.close()
 
-    def __enter__(self):
+    def __enter__(self) -> "BitmapFont":
         """Initialize/open the font file"""
         self.__init__()
         return self
 
-    def __exit__(self, exception_type, exception_value, traceback):
+    def __exit__(self, exception_type: Any, exception_value: Any, traceback: Any) -> None:
         """cleanup on exit"""
         self.deinit()
 
-    def draw_char(self, char, x, y, framebuffer, color, size=1):
+    def draw_char(
+        self,
+        char: str,
+        x: int,
+        y: int,
+        framebuffer: "FrameBuffer",
+        color: int,
+        size: int = 1,
+    ) -> None:
         """Draw one character at position (x,y) to a framebuffer in a given color"""
         size = max(size, 1)
         # Don't draw the character if it will be clipped off the visible area.
@@ -603,7 +658,7 @@ class BitmapFont:
                 if (line >> char_y) & 0x1:
                     framebuffer.fill_rect(x + char_x * size, y + char_y * size, size, size, color)
 
-    def width(self, text):
+    def width(self, text: str) -> int:
         """Return the pixel width of the specified text message."""
         return len(text) * (self.font_width + 1)
 
