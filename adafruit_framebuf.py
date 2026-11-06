@@ -81,9 +81,7 @@ class GS2HMSBFormat:
         framebuf.buf = [fill for i in range(len(framebuf.buf))]
 
     @staticmethod
-    def rect(
-        framebuf: "FrameBuffer", x: int, y: int, width: int, height: int, color: int
-    ) -> None:
+    def rect(framebuf: "FrameBuffer", x: int, y: int, width: int, height: int, color: int) -> None:
         """Draw the outline of a rectangle at the given location, size and color."""
         for _x in range(x, x + width):
             for _y in range(y, y + height):
