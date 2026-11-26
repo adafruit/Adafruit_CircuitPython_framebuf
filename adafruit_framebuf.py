@@ -40,6 +40,25 @@ RGB888 = 4  # Neopixels and Dotstars
 GS2_HMSB = 5  # 2-bit color displays like the HT16K33 8x8 Matrix
 
 
+def _fill_bytes(buf, value):
+    """Set every byte of buf to value: one store, then log2(n) copies of the filled part."""
+    n = len(buf)
+    if not n:
+        return
+    try:
+        mv = memoryview(buf)
+    except TypeError:
+        for i in range(n):
+            buf[i] = value
+        return
+    mv[0] = value
+    k = 1
+    while k < n:
+        c = min(k, n - k)
+        mv[k : k + c] = mv[0:c]
+        k += c
+
+
 class GS2HMSBFormat:
     """GS2HMSBFormat"""
 
@@ -111,24 +130,45 @@ class MHMSBFormat:
     @staticmethod
     def fill(framebuf, color):
         """completely fill/clear the buffer with a color"""
-        if color:
-            fill = 0xFF
-        else:
-            fill = 0x00
-        for i in range(len(framebuf.buf)):
-            framebuf.buf[i] = fill
+        _fill_bytes(framebuf.buf, 0xFF if color else 0x00)
 
     @staticmethod
     def fill_rect(framebuf, x, y, width, height, color):
         """Draw a rectangle at the given location, size and color. The ``fill_rect`` method draws
         both the outline and interior."""
-        for _x in range(x, x + width):
-            offset = 7 - _x & 0x07
-            for _y in range(y, y + height):
-                index = (_y * framebuf.stride + _x) // 8
-                framebuf.buf[index] = (framebuf.buf[index] & ~(0x01 << offset)) | (
-                    (color != 0) << offset
-                )
+        buf = framebuf.buf
+        stride = framebuf.stride
+        if stride & 0x07:
+            # Rows don't start on a byte boundary: draw pixel by pixel
+            for _x in range(x, x + width):
+                offset = 7 - _x & 0x07
+                for _y in range(y, y + height):
+                    index = (_y * stride + _x) // 8
+                    buf[index] = (buf[index] & ~(0x01 << offset)) | ((color != 0) << offset)
+            return
+        if width < 1:
+            return
+        # Every row has the same layout, so the masks are worked out once.
+        # The leftmost pixel is the most significant bit.
+        first = (y * stride + x) >> 3
+        span = (x & 0x07) + width - 1 >> 3
+        head = 0xFF >> (x & 0x07)
+        tail = (0xFF << (7 - ((x + width - 1) & 0x07))) & 0xFF
+        if not span:
+            head &= tail
+        fill = 0xFF if color != 0 else 0x00
+        head_set = head & fill
+        head ^= 0xFF
+        tail_set = tail & fill
+        tail ^= 0xFF
+        for first in range(first, first + height * (stride >> 3), stride >> 3):
+            buf[first] = buf[first] & head | head_set
+            if span:
+                # A loop, not a slice assignment: in CircuitPython that also moves the rest of buf
+                for i in range(first + 1, first + span):
+                    buf[i] = fill
+                i = first + span
+                buf[i] = buf[i] & tail | tail_set
 
 
 class MVLSBFormat:
@@ -151,26 +191,28 @@ class MVLSBFormat:
     @staticmethod
     def fill(framebuf, color):
         """completely fill/clear the buffer with a color"""
-        if color:
-            fill = 0xFF
-        else:
-            fill = 0x00
-        for i in range(len(framebuf.buf)):
-            framebuf.buf[i] = fill
+        _fill_bytes(framebuf.buf, 0xFF if color else 0x00)
 
     @staticmethod
     def fill_rect(framebuf, x, y, width, height, color):
         """Draw a rectangle at the given location, size and color. The ``fill_rect`` method draws
         both the outline and interior."""
-        while height > 0:
-            index = (y >> 3) * framebuf.stride + x
-            offset = y & 0x07
-            for w_w in range(width):
-                framebuf.buf[index + w_w] = (framebuf.buf[index + w_w] & ~(0x01 << offset)) | (
-                    (color != 0) << offset
-                )
-            y += 1
-            height -= 1
+        buf = framebuf.buf
+        stride = framebuf.stride
+        y_end = y + height
+        while y < y_end:
+            page = y >> 3
+            nxt = min((page + 1) << 3, y_end)
+            bits = ((1 << (nxt - y)) - 1) << (y & 0x07)
+            index = page * stride + x
+            if color != 0:
+                for i in range(index, index + width):
+                    buf[i] |= bits
+            else:
+                bits = ~bits
+                for i in range(index, index + width):
+                    buf[i] &= bits
+            y = nxt
 
 
 class RGB565Format:
@@ -248,9 +290,10 @@ class RGB888Format:
     @staticmethod
     def fill(framebuf, color):
         """completely fill/clear the buffer with a color"""
-        fill = (color >> 16) & 255, (color >> 8) & 255, color & 255
-        for i in range(0, len(framebuf.buf), 3):
-            framebuf.buf[i : i + 3] = bytes(fill)
+        fill = bytes(((color >> 16) & 255, (color >> 8) & 255, color & 255))
+        buf = framebuf.buf
+        for i in range(0, len(buf), 3):
+            buf[i : i + 3] = fill
 
     @staticmethod
     def fill_rect(framebuf, x, y, width, height, color):
@@ -327,15 +370,17 @@ class FrameBuffer:
     def pixel(self, x, y, color=None):
         """If ``color`` is not given, get the color value of the specified pixel. If ``color`` is
         given, set the specified pixel to the given color."""
-        if self.rotation == 1:
-            x, y = y, x
-            x = self.width - x - 1
-        if self.rotation == 2:
-            x = self.width - x - 1
-            y = self.height - y - 1
-        if self.rotation == 3:
-            x, y = y, x
-            y = self.height - y - 1
+        rotation = self._rotation
+        if rotation:
+            if rotation == 1:
+                x, y = y, x
+                x = self.width - x - 1
+            elif rotation == 2:
+                x = self.width - x - 1
+                y = self.height - y - 1
+            elif rotation == 3:
+                x, y = y, x
+                y = self.height - y - 1
 
         if x < 0 or x >= self.width or y < 0 or y >= self.height:
             return None
@@ -382,17 +427,19 @@ class FrameBuffer:
         """Draw a rectangle at the given location, size and color. The ```rect``` method draws only
         a 1 pixel outline."""
         # pylint: disable=too-many-arguments
-        if self.rotation == 1:
-            x, y = y, x
-            width, height = height, width
-            x = self.width - x - width
-        if self.rotation == 2:
-            x = self.width - x - width
-            y = self.height - y - height
-        if self.rotation == 3:
-            x, y = y, x
-            width, height = height, width
-            y = self.height - y - height
+        rotation = self._rotation
+        if rotation:
+            if rotation == 1:
+                x, y = y, x
+                width, height = height, width
+                x = self.width - x - width
+            elif rotation == 2:
+                x = self.width - x - width
+                y = self.height - y - height
+            elif rotation == 3:
+                x, y = y, x
+                width, height = height, width
+                y = self.height - y - height
 
         if (
             width < 1
@@ -417,13 +464,23 @@ class FrameBuffer:
 
     def line(self, x_0, y_0, x_1, y_1, color):
         """Bresenham's line algorithm"""
-        d_x = abs(x_1 - x_0)
-        d_y = abs(y_1 - y_0)
+        # int(): an end point may be a whole float such as width / 2
+        d_x = int(abs(x_1 - x_0))
+        d_y = int(abs(y_1 - y_0))
+        if d_y == 0:
+            self.rect(int(min(x_0, x_1)), y_0, d_x + 1, 1, color, fill=True)
+            return
+        if d_x == 0:
+            self.rect(x_0, int(min(y_0, y_1)), 1, d_y + 1, color, fill=True)
+            return
         x, y = x_0, y_0
         s_x = -1 if x_0 > x_1 else 1
         s_y = -1 if y_0 > y_1 else 1
+        # d_x and d_y are doubled so that the error term stays an integer (was d / 2.0)
+        d_x <<= 1
+        d_y <<= 1
         if d_x > d_y:
-            err = d_x / 2.0
+            err = d_x >> 1
             while x != x_1:
                 self.pixel(x, y, color)
                 err -= d_y
@@ -432,7 +489,7 @@ class FrameBuffer:
                     err += d_x
                 x += s_x
         else:
-            err = d_y / 2.0
+            err = d_y >> 1
             while y != y_1:
                 self.pixel(x, y, color)
                 err -= d_x
@@ -590,18 +647,24 @@ class BitmapFont:
         #   y < -self.font_height or y >= framebuffer.height:
         #    return
         # Go through each column of the character.
-        for char_x in range(self.font_width):
-            # Grab the byte for the current column of font data.
-            self._font.seek(2 + (ord(char) * self.font_width) + char_x)
-            try:
-                line = struct.unpack("B", self._font.read(1))[0]
-            except RuntimeError:
-                continue  # maybe character isnt there? go to next
-            # Go through each row in the column byte.
-            for char_y in range(self.font_height):
-                # Draw a pixel for each bit that's flipped on.
-                if (line >> char_y) & 0x1:
-                    framebuffer.fill_rect(x + char_x * size, y + char_y * size, size, size, color)
+        # Read all columns of the glyph at once (a missing glyph reads short).
+        self._font.seek(2 + ord(char) * self.font_width)
+        columns = self._font.read(self.font_width)
+        height = self.font_height
+        for char_x, line in enumerate(columns):
+            bits = line
+            char_y = 0
+            # Stop at the last lit pixel of the column
+            while bits and char_y < height:
+                if bits & 0x1:
+                    if size == 1:
+                        framebuffer.pixel(x + char_x, y + char_y, color)
+                    else:
+                        framebuffer.fill_rect(
+                            x + char_x * size, y + char_y * size, size, size, color
+                        )
+                bits >>= 1
+                char_y += 1
 
     def width(self, text):
         """Return the pixel width of the specified text message."""
